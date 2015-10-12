@@ -1,0 +1,201 @@
+MLEM2による実験フレーム
+==================================================================================
+******
+
+## 0. 概要
+- LEM2を用いて、実験ができるRmdファイルスクリプトの一例を作る
+
+## 1. 準備
+```{r, setup-knitr, include=FALSE}
+# knitrの設定
+library(knitr)
+opts_chunk$set(warning=FALSE, comment='', cache=FALSE, message=FALSE)
+opts_chunk$set(fig.width=14, fig.height=12)
+```
+
+```{r, packages}
+## Packages
+lapply(c("data.table", "plyr", "dplyr", "stringr","rlist", "readr"), require, character.only = TRUE)
+lapply(c("magrittr", "pipeR"), require, character.only = TRUE)
+lapply(c("ggplot2"), require, character.only = TRUE)
+lapply(c("DT"), require, character.only = TRUE)
+lapply(c("RoughSets"), require, character.only = TRUE)
+lapply(c("xtable", "psych"), require, character.only = TRUE)
+```
+
+## 2. 実験
+
+### 2-1. MLEM2
+```{r}
+results <- list()
+#kFilenames <- c("hayes-roth", "iris", "wine")
+kFilenames <- c("hayes-roth")
+kIter1 <- 2
+kIter2 <- 5
+kIter  <- kIter1*kIter2
+kMerged.rate <- seq(0.1,0.9,by=0.1)
+
+for(fn in kFilenames){
+  results.fn <- list()
+  for(i in 1:kIter1){
+    for(j in 1:kIter2){
+      print(paste("fn:",fn," i:", i," j:",j, sep=""))
+      
+      data.train <- read_tsv(paste("/data/uci/",fn,"/",fn,"-train",i,"-",j,".tsv", sep=""))
+      data.train <- na.omit(data.train)
+      data.test  <- read_tsv(paste("/data/uci/",fn,"/",fn,"-test",i,"-",j,".tsv", sep=""))
+      data.test  <- na.omit(data.test)
+      data.nominal <- read.csv(paste("/data/uci/",fn,"/",fn,".nominal", sep=""), sep=",", header=F)
+      data.nominal <- as.vector(as.matrix(data.nominal))
+      
+      
+      ## Incert multiple Sample
+      source("/home/ooki/R/createData/InsertSample.R")
+      #data.train <- insertNewValueToData(data.train, 100)
+      #data.train <- insertNewSampleToData(data.train, 1000)
+      
+      ## PP Cluster
+      source("/home/ooki/R/ppdm/cluster.R")
+      data.train <- ppCluster(data.train, merged.number=0, merged.rate=0.1, 
+                              merged.size="max", rep.Method = "Merged")
+      
+      ## measure
+      source("/home/ooki/R/ppdm/get_PPDM_Measure.R")
+      kano <- calKAnonymity(data.train)
+      
+      ## convert decisicon table class
+      ## indx.nominalを自動的に決めれないか
+      data.train   <- SF.asDecisionTable(data.train, decision.attr=ncol(data.train), indx.nominal=data.nominal)
+      #true.classes <- data.test[,ncol(data.test), with=F][[1]]
+      true.classes <- data.test[,ncol(data.test)]
+      #data.test    <- SF.asDecisionTable(data.test[,-ncol(data.test), with=FALSE])
+      data.test    <- SF.asDecisionTable(data.test[,-ncol(data.test)])
+      
+      ## 条件属性の離散化(と同時に、DecisionTable & data.frame型になってる)
+      source("/home/ooki/R/roughsets/My.Discretization.R")
+      source("/home/ooki/R/roughsets/My.ObjectFactory.R")
+      data.train <- D.discretization.RST(data.train,
+                                         type.method = "convert.nominal")
+  
+      ## cut value 不要
+      #cut.values <- D.discretization.RST(data.train,
+      #                                   type.method = "unsupervised.quantiles",
+      #                                   nOfIntervals = 3)
+      #data.train <- SF.applyDecTable(data.train, cut.values)
+      #data.test  <- SF.applyDecTable(data.test,  cut.values)
+      
+      ## rule induction from the training set:
+      source("/home/ooki/R/roughsets/My.RI.LEM2Rules.RST.R")
+      source("/home/ooki/R/roughsets/My.RuleInduction.OtherFuncCollections.R")
+      rules <- My.RI.MLEM2Rules.RST(data.train)
+      #rules <- RI.LEM2Rules.RST(data.train)
+      
+      #rules
+      #class(rules)
+      #str(rules)
+
+      ## predicitons for the test set:
+      source("/home/ooki/R/roughsets/LERS.R")
+      pred.vals <- predict.LERS(rules, data.test)
+      #pred.vals1 <- predict(rules, data.test, votingMethod = X.ruleStrength)
+      #pred.vals2 <- predict(rules, data.test, votingMethod = X.laplace)
+      #pred.vals3 <- predict(rules, data.test, votingMethod = X.rulesCounting)
+
+      ## checking the accuracy of predictions:
+      precision <- sprintf("%.3f", mean(pred.vals == true.classes))
+      #precision <- c(sprintf("%.3f", mean(pred.vals1 == true.classes)), 
+      #               sprintf("%.3f", mean(pred.vals2 == true.classes)),
+      #               sprintf("%.3f", mean(pred.vals3 == true.classes)))      
+      precision.sd <- sprintf("%.3f", sd(pred.vals == true.classes))
+      source("/home/ooki/R/ppdm/get_PPDM_Measure.R")
+      entropy <- calEntropyForData(data.train)
+      result <- paste(precision, "±", precision.sd, sep="")
+      #result <- c(paste(sprintf("%.3f", mean(pred.vals1 == true.classes)),"±",sprintf("%.3f", sd(pred.vals1 == true.classes)), sep=""),
+      #            paste(sprintf("%.3f", mean(pred.vals2 == true.classes)),"±",sprintf("%.3f", sd(pred.vals2 == true.classes)), sep=""),
+      #            paste(sprintf("%.3f", mean(pred.vals3 == true.classes)),"±",sprintf("%.3f", sd(pred.vals3 == true.classes)), sep=""))
+  
+      ## append
+      results.fn <- list.append(results.fn, 
+                                list(precision = precision, 
+                                     precision_sd = precision.sd,
+                                     entropy = entropy,
+                                     kano = kano,
+                                     result = result))
+    }
+  }
+  for(i in kIter){
+    names(results.fn) <- paste(fn,seq(1:kIter),sep="")
+  }
+  results <- list.append(results, results.fn)
+}
+names(results) <- kFilenames
+```
+
+## 3. テーブルへの展開
+```{r}
+## Get mean ± sd Fucntion
+getMeanSd <- function(numeric.vec=NULL){
+  value.mean <- mean(numeric.vec)
+  value.sd   <- sd(numeric.vec)
+  return(paste(sprintf("%.3f", value.mean),"±",sprintf("%.3f", value.sd), sep=""))
+}
+
+getMeanSd_for_DataTable <- funciton(){
+  
+}
+
+getTable <- function(results, cap){
+  results.tmp <- data.table()
+  results.tmp <- as.data.table(t(as.data.table(list.map(results[[1]], 
+                                                      as.numeric(precision))))) %>% setnames("MLEM2")
+  results.tmp2 <- as.data.table(t(as.data.table(list.map(results[[1]], 
+                                                       as.numeric(entropy))))) %>% setnames("entropy")
+  results.kano <- as.data.table(t(as.data.table(list.map(results[[1]],
+                                                       as.numeric(kano))))) %>% setnames("kano")
+  results.tmp <- cbind(results.tmp, results.tmp2, results.kano)
+  results.tmp <- as.data.frame(results.tmp)
+  results.tmp$MLEM2 <- paste(sprintf("%.3f", mean(results.tmp$MLEM2)),"±",sprintf("%.3f", sd(results.tmp$MLEM2)), sep="")
+  results.tmp$entropy <- paste(sprintf("%.3f", mean(results.tmp$entropy)),"±",sprintf("%.3f", sd(results.tmp$entropy)), sep="")
+  results.tmp$kano <- paste(sprintf("%.3f", mean(results.tmp$kano)),"±",sprintf("%.3f", sd(results.tmp$kano)), sep="")
+  results.tmp <- unique(results.tmp)
+  xtable(results.tmp, ,label="tb-ref", caption=cap)
+}
+```
+
+```{r}
+getTable(results, cap="MLEM2 Sample")
+#df2latex(results.tmp, rowlabels=F, apa=F, short.names=F, char=TRUE, 
+#         caption="Thurstone Correlation matrix")
+```
+
+```{r}
+## convert from list to datatable
+results.datatable <- data.table()
+## fileの種類分繰り返し（例：iris, wineなら、2）
+for(i in 1:length(results)){
+  results.tmp <- data.table()
+  results.tmp <- as.data.table(t(as.data.table(list.map(results[[i]], precision))))
+  results.tmp %>%
+    mutate(V1 = as.numeric(V1)) %>%
+    mutate(name=names(results)[i]) -> results.tmp
+ results.datatable <- rbind_list(results.datatable, results.tmp)
+}
+
+## 
+results.datatable %>%
+  group_by(name) %>%
+  summarise_each(funs(getMeanSd)) %>%
+  datatable()
+```
+
+## 4. パレート最適ルールのイメージ
+```{r}
+df.pareto <- data.frame(acuracy = c(0.78,0.7,0.75,0.8,0.75,0.70,0.72,0.68,0.60,0.55), 
+                        privacy  = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9))
+ggplot(df.pareto, aes(x=privacy, y=acuracy)) + 
+  geom_line() + 
+  geom_point(shape=21, size=3) + 
+  ylim(0,1.00) +
+  scale_x_continuous(breaks=seq(0,0.9,by=0.1))
+```
+

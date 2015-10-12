@@ -40,5 +40,74 @@ cal_dist_rules <- function(df){
   #plot(clust.df)
 }
 
+## ルール間の距離から、ルールを併合して新しいルールを作る
+recreate_rules_by_dist <- function(mat.dist, rules, k){
+  for(di in 1:length(rules)){
+    mat.dist[di, di] <- Inf
+  }
+  vec.supportsize <- sapply(rules, function(rule){
+    return(length(rule$support))
+  })
+  minValue <- min(vec.supportsize)
+  # support sizeがk以下のルールがある内は繰り返す
+  while(minValue < k){
+    ind.minValue <- which(vec.supportsize == minValue)
+    if(length(ind.minValue) == 1){
+      ind.merge.target.rule <- ind.minValue
+    }else{
+      ind.merge.target.rule <- ind.minValue[1]
+    }
+    vec.dist <- mat.dist[ind.merge.target.rule,] 
+    minValue <- min(vec.dist)
+    # 最も距離が近いルールを求める
+    ind.minValue <- which(vec.dist == minValue)
+    if(length(ind.minValue) == 1){
+      rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.minValue]])
+    }else{
+      # 結論部が同じルールかどうか
+      vec.consequent <- sapply(ind.minValue, function(x){
+        return(rules[[x]]$consequent)
+      })
+      ind.minValue <- ind.minValue[vec.consequent == rules[[ind.merge.target.rule]]$consequent]
+      if(length(ind.minValue) == 1){
+        rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.minValue]])
+      }else{
+        # 条件部を構成する属性名がなるべく同じであるか
+        vec.match.length.idx <- sapply(ind.minValue, function(x){
+          return(length(intersect(rules[[x]]$idx, rules[[ind.merge.target.rule]]$idx)))
+        })
+        minValue <- min(vec.match.length.idx)
+        ind.minValue <- ind.minValue[vec.match.length.idx == minValue]
+        if(length(ind.minValue) == 1){
+          rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.minValue]])
+        }else{
+          # support sizeが小さいルールにマージする
+          minValue <- min(vec.supportsize[ind.minValue])
+          ind.minValue <- ind.minValue[which(vec.supportsize[ind.minValue] == minValue)]
+          if(length(ind.minValue) == 1){
+            rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.minValue]])
+          }else{
+            # なければ、候補ルールの中の最初のルールとマージする
+            ind.minValue <- ind.minValue[1]
+            rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.minValue])
+          }
+        }
+      }
+    }
+    rules <- rules[-c(ind.merge.target.rule,ind.minValue)]
+    rules <- list.append(rules, rule.new)
+    vec.supportsize <- sapply(rules, function(rule){
+      return(length(rule$support))
+    })
+    minValue <- min(vec.supportsize)
+  }
+  return(rules)
+}
+
+## 2つのルールをマージして新しいルールを作る
+mergeRule <- function(rule1, rule2){
+  
+  return(rule)
+}
 
 

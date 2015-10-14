@@ -106,7 +106,30 @@ recreate_rules_by_dist <- function(mat.dist, rules, k){
 
 ## 2つのルールをマージして新しいルールを作る
 mergeRule <- function(rule1, rule2){
+  # 条件部の計算
+  len.rule1.idx <- length(rule1$idx)
+  ## ここから
+  for(ind.idx in 1:len.rule1.idx){
+    # num
+    if(is.numeric(rule1$values[[ind.idx]])){
   
+    }
+    # nom
+    else{
+      print(rule1$values[[i]])
+    }
+  }
+
+  # consequentの計算
+  if(rule1$consequent == rule2$consequent){
+    consequent.new <- rule1$consequent
+  }else{
+    consequent.new <- paste("[",rule1$consequent,",",rule2$consequent,"]",sep="")
+  }
+  # support数の計算
+  suport.new <- union(rule1$support, rule2$support)
+  # 新ルールを生成
+  # ここから
   return(rule)
 }
 

@@ -150,22 +150,7 @@ mergeRule <- function(rule1, rule2){
                    consequent = consequent.new, 
                    support = suport.new)
   
-  # ここから
-  #rules2 = unlist(rules.simple, recursive = FALSE)
-  rules2 = rules.simple
-  
-  attr(rules2, "uniqueCls") <- as.character(sort(uniqueCls))
-  attr(rules2, "clsProbs") <- clsFreqs/sum(clsFreqs)
-  attr(rules2, "majorityCls") <- as.character(sort(uniqueCls)[which.max(clsFreqs)])
-  attr(rules2, "method") <- "MLEM2Rules"
-  attr(rules2, "dec.attr") <- decisionName
-  attr(rules2, "colnames") <- colnames(decision.table)[-decIdx]
-  
-  # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
-  source("~/R/roughsets/My.ObjectFactory.R")
-  rules2 = My.ObjectFactory(rules2, classname = "RuleSetRST")
-  
-  return(rule)
+  return(rule.new)
 }
 
 

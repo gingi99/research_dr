@@ -1,0 +1,59 @@
+---
+title: "ex_bootstrapSampling"
+author: "ooki"
+date: "2015/3/14"
+output: html_document
+---
+
+## 1. ライブラリの読み込み
+```{r}
+library(simpleboot)
+```
+
+## 2. 仮定した分布からのサンプリング
+- 平均170, 標準偏差6の正規分布に従うサンプルを20個生成
+
+```{r}
+set.seed(20)
+sam<-rnorm(20,170,6)
+sam
+```
+
+## 3. パラメトリックブートストラップ
+- 確率分布型を仮定するブートストラップ
+
+```{r}
+tt<-numeric(0)
+ME<-mean(sam);
+SD<-sd(sam);
+for(i in 1:2000){
+  z <- rnorm(20,0,1);
+  tt <- cbind(tt, mean(ME+z*SD))
+}
+mean(tt)
+quantile(tt,p=c(0.025,0.975))
+```
+
+## 4. ノンパラメトリックブートストラップ
+- 確率分布を仮定せずに、もともとあるサンプルを重複を許して、サンプルを抽出する
+
+```{r}
+tt<-numeric(0)
+for(i in 1:2000){
+  bs<- sample(sam,20,replace = TRUE)
+  tt<-cbind(tt, mean(bs))
+}
+mean(tt)
+quantile(tt,p=c(0.025,0.975))
+```
+
+- ノンパラメトリックブートストラップを簡単に行うパッケージとして、simplebootがある。
+- 下記は、標本データsamを用いた10個のブートストラップ標本の平均値を求める例
+
+```{r}
+library(simpleboot)
+set.seed(20)
+b.mean <- one.boot(sam, mean, 10)
+b.mean$t
+```
+

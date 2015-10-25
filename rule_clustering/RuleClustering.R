@@ -14,7 +14,12 @@ convert_df_from_rules <- function(rules){
                             dimnames=list(c(), 
                                           c(condition_attr, decision_attr))), stringsAsFactors=F)
     for(i in 1:length(idx)){
-      df.onerule[1,idx[i]] <- values[[i]]
+      # valuesが複数持つ場合に応じて条件分岐
+      if(length(values[[i]]) == 1){
+        df.onerule[1,idx[i]] <- values[[i]]
+      }else{
+        df.onerule[1,idx[i]] <- values[[i]][1]
+      }
     }
     df.onerule[1, decision_attr] <- rule$consequent
     return(df.onerule)
@@ -46,6 +51,8 @@ mergeRules <- function(rule1, rule2){
   #print(rule2)
   
   # 2つのルールに両方持つ条件属性集合を抽出
+  print(rule1$idx)
+  print(rule2$idx)
   idxs <- intersect(rule1$idx, rule2$idx)
   
   # 属性値リストの定義
@@ -91,18 +98,17 @@ mergeRules <- function(rule1, rule2){
   return(rule.new)
 }
 
-
 ## ルール間の距離から、ルールを併合して新しいルールを作る
-recreate_rules_by_dist <- function(mat.df.dist, rules, k=3){
+recreate_rules_by_dist <- function(rules, k=3){
   # 初期化
-  rules.new <- rules 
-  for(di in 1:length(rules)){
-    mat.df.dist[di, di] <- Inf
-  }
+  rules.new <- rules
+  
+  # ルール群のサポート値の最小値を求める
   vec.supportsize <- sapply(rules, function(rule){
     return(length(rule$support))
   })
   minSupportValue <- min(vec.supportsize)
+  
   # support sizeがk以下のルールがある内は繰り返す
   while(minSupportValue < k){
     ind.minValue <- which(vec.supportsize == minSupportValue)
@@ -111,23 +117,37 @@ recreate_rules_by_dist <- function(mat.df.dist, rules, k=3){
     }else{
       ind.merge.target.rule <- ind.minValue[1]
     }
+    # ルール間の距離を求める
+    mat.df.dist <- cal_dist_rules(convert_df_from_rules(rules.new))
+    for(di in 1:length(rules.new)){
+      mat.df.dist[di, di] <- Inf
+    }
+    # merge target ルールとの距離を求める
     vec.dist <- mat.df.dist[ind.merge.target.rule,] 
-    minDistValue <- min(vec.dist)
+    
+    # merge target ルールと同じ条件属性のあるものを判定
+    vec.judge.condition <- sapply(rules.new, function(rule){
+      return(length(intersect(rule$idx, rules.new[[ind.merge.target.rule]]$idx)) > 0)
+    })
+    
+    # vec.distを同じ条件属性のあるルールだけに限定して最小距離を求める
+    minDistValue <- min(vec.dist[vec.judge.condition])
+    
     # 最も距離が近いルールを求める
     ind.minDistValue <- which(vec.dist == minDistValue)
     if(length(ind.minDistValue) == 1){
       ind.merge.target.rule2 <- ind.minDistValue
-      rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.merge.target.rule2]])
+      rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
     }else{
       # 結論部が同じルールかどうか
       vec.consequent <- sapply(ind.minDistValue, function(x){
-        return(rules[[x]]$consequent)
+        return(rules.new[[x]]$consequent)
       })
-      ind.minConsequentValue <- ind.minDistValue[vec.consequent == rules[[ind.merge.target.rule]]$consequent]
+      ind.minConsequentValue <- ind.minDistValue[vec.consequent == rules.new[[ind.merge.target.rule]]$consequent]
       # 結論部が同じルールが1つ
       if(length(ind.minConsequentValue) == 1){
         ind.merge.target.rule2 <- ind.minConsequentValue
-        rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.merge.target.rule2]])
+        rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
       # 結論部が同じルールが2つ以上 or ない
       }else{
         # ないなら、距離が小さいルールを再度入れなおす
@@ -136,24 +156,27 @@ recreate_rules_by_dist <- function(mat.df.dist, rules, k=3){
         }
         # 条件部を構成する属性名がなるべく同じであるか
         vec.match.length.idx <- sapply(ind.minConsequentValue, function(x){
-          return(length(intersect(rules[[x]]$idx, rules[[ind.merge.target.rule]]$idx)))
+          return(length(intersect(rules.new[[x]]$idx, rules.new[[ind.merge.target.rule]]$idx)))
         })
         maxConditionValue <- max(vec.match.length.idx)
         ind.maxConditionValue <- ind.minConsequentValue[vec.match.length.idx == maxConditionValue]
         if(length(ind.maxConditionValue) == 1){
           ind.merge.target.rule2 <- ind.maxConditionValue
-          rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.merge.target.rule2]])
+          rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
         }else{
-          # support sizeが小さいルールにマージする
-          minSupportValue <- min(vec.supportsize[ind.maxConditionValue])
-          ind.minSupportValue <- ind.maxConditionValue[which(vec.supportsize[ind.maxConditionValue] == minSupportValue)]
+          # support sizeが小さいルールとマージする
+          vec.supportsize <- sapply(rules.new[ind.maxConditionValue], function(rule){
+            return(length(rule$support))
+          })
+          minSupportValue <- min(vec.supportsize)
+          ind.minSupportValue <- ind.maxConditionValue[which(vec.supportsize == minSupportValue)]
           if(length(ind.minSupportValue) == 1){
             ind.merge.target.rule2 <- ind.minSupportValue
-            rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.merge.target.rule2]])
+            rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
           }else{
             # なければ、候補ルールの中の最初のルールとマージする
             ind.merge.target.rule2 <- ind.minSupportValue[1]
-            rule.new <- mergeRules(rules[[ind.merge.target.rule]], rules[[ind.merge.target.rule2]])
+            rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
           }
         }
       }
@@ -165,27 +188,25 @@ recreate_rules_by_dist <- function(mat.df.dist, rules, k=3){
     })
     print(vec.supportsize)
     minSupportValue <- min(vec.supportsize)
+    
+    # attributeをつける
+    attr(rules.new, "uniqueCls") <- attributes(rules)$uniqueCls
+    attr(rules.new, "clsProbs") <- attributes(rules)$clsProbs
+    attr(rules.new, "majorityCls") <- attributes(rules)$majorityCls
+    attr(rules.new, "method") <- "MLEM2Rules"
+    attr(rules.new, "dec.attr") <- attributes(rules)$dec.attr
+    attr(rules.new, "colnames") <- attributes(rules)$colnames
+    
+    # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
+    source("~/R/roughsets/My.ObjectFactory.R")
+    rules.new <- My.ObjectFactory(rules.new, classname = "RuleSetRST")
   }
-  
-  # attributeをつける
-  attr(rules.new, "uniqueCls") <- attributes(rules)$uniqueCls
-  attr(rules.new, "clsProbs") <- attributes(rules)$clsProbs
-  attr(rules.new, "majorityCls") <- attributes(rules)$majorityCls
-  attr(rules.new, "method") <- "MLEM2Rules"
-  attr(rules.new, "dec.attr") <- attributes(rules)$dec.attr
-  attr(rules.new, "colnames") <- attributes(rules)$colnames
-  
-  # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
-  source("~/R/roughsets/My.ObjectFactory.R")
-  rules.new <- My.ObjectFactory(rules.new, classname = "RuleSetRST")
   return(rules.new)
 }
 
 # main 関数
 get_rule_clustering <- function(rules, k=3){
-  df.rules <- convert_df_from_rules(rules)
-  mat.df.dist <- cal_dist_rules(df.rules)
-  rules.new <- recreate_rules_by_dist(mat.df.dist, rules, k)
+  rules.new <- recreate_rules_by_dist(rules, k)
   return(rules.new)
 }
 

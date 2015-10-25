@@ -2,6 +2,7 @@
 library(rlist)
 source("~/R/ppdm/cluster.R")
 source("~/R/ppdm/get_PPDM_Measure.R")
+source("~/R/roughsets/My.ObjectFactory.R")
 
 # ルールの集合rulesをdfに変換する関数
 convert_df_from_rules <- function(rules){
@@ -51,8 +52,6 @@ mergeRules <- function(rule1, rule2){
   #print(rule2)
   
   # 2つのルールに両方持つ条件属性集合を抽出
-  print(rule1$idx)
-  print(rule2$idx)
   idxs <- intersect(rule1$idx, rule2$idx)
   
   # 属性値リストの定義
@@ -70,14 +69,14 @@ mergeRules <- function(rule1, rule2){
     ## nom
     else{
       # 指定した条件属性のルールの値が一致したら
-      if(rule1$values[[which(idxs[ind.idx] == rule1$idx)]] == 
-           rule2$values[[which(idxs[ind.idx] == rule2$idx)]]){
+      if(setequal(rule1$values[[which(idxs[ind.idx] == rule1$idx)]], 
+                  rule2$values[[which(idxs[ind.idx] == rule2$idx)]])){
         list.values.new <- list.append(list.values.new, 
                                        rule1$values[[which(idxs[ind.idx] == rule1$idx)]])
       }else{
         list.values.new <- list.append(list.values.new, 
-                                       c(rule1$values[[which(idxs[ind.idx] == rule1$idx)]], 
-                                         rule2$values[[which(idxs[ind.idx] == rule2$idx)]]))
+                                       union(rule1$values[[which(idxs[ind.idx] == rule1$idx)]], 
+                                             rule2$values[[which(idxs[ind.idx] == rule2$idx)]]))
       }
     }
   }
@@ -198,7 +197,6 @@ recreate_rules_by_dist <- function(rules, k=3){
     attr(rules.new, "colnames") <- attributes(rules)$colnames
     
     # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
-    source("~/R/roughsets/My.ObjectFactory.R")
     rules.new <- My.ObjectFactory(rules.new, classname = "RuleSetRST")
   }
   return(rules.new)

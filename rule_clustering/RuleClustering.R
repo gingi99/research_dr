@@ -22,7 +22,12 @@ convert_df_from_rules <- function(rules){
         df.onerule[1,idx[i]] <- values[[i]][1]
       }
     }
-    df.onerule[1, decision_attr] <- rule$consequent
+    # 結論部が複数持つ場合に応じて条件分岐
+    if(length(rule$consequent) == 1){
+      df.onerule[1, decision_attr] <- rule$consequent      
+    }else{
+      df.onerule[1, decision_attr] <- rule$consequent[1]
+    }
     return(df.onerule)
   })  
   df <- list.stack(list.df)
@@ -81,10 +86,10 @@ mergeRules <- function(rule1, rule2){
     }
   }
   # consequentの計算
-  if(rule1$consequent == rule2$consequent){
+  if(setequal(rule1$consequent, rule2$consequent)){
     consequent.new <- rule1$consequent
   }else{
-    consequent.new <- c(rule1$consequent,rule2$consequent)
+    consequent.new <- union(rule1$consequent, rule2$consequent)
   }
   # support数の計算
   suport.new <- sort(union(rule1$support, rule2$support))

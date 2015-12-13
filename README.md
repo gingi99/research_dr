@@ -14,5 +14,8 @@
 ## Experiments
 - 実験用のスクリプト格納ディレクトリ
 
+## mlem2_python
+- MLEM2 by Python
+
 ## rule_clustering
 - Ruleのクラスタリング手法のレポジトリ

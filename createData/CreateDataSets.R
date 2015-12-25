@@ -12,6 +12,10 @@ head(iris)
 adult <- fread("/data/uci/adult/adult.tsv")
 #write.table(adult, "/data/uci/adult/adult.tsv", sep="\t", quote=FALSE, row.names=FALSE)
 
+### bank
+bank <- fread("/data/uci/bank/origin/bank-full.csv")
+#write.table(bank, "/data/uci/bank/bank.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+
 ### car
 car <- fread("/data/uci/car/car.tsv")
 head(car)
@@ -134,4 +138,18 @@ createDataForCrossValidation <- function(filename, n, m){
     }
   }
 }
-#createDataForCrossValidation("/data/uci/adult/adult.tsv", 10, 10)
+#createDataForCrossValidation("/data/uci/bank/bank.tsv", 10, 10)
+
+## Adult's data cleansing
+adult <- fread("/data/uci/adult/adult.tsv")
+adult2 <- dplyr::select(adult, age, workclass, education, marital_status, occupation, race, sex, native_country, class)
+#adult2$age <- (adult2$age - mean(adult2$age, na.rm = T)) / sd(adult2$age, na.rm = T)
+adult2$age <- (adult2$age - min(adult2$age, na.rm = T)) / (max(adult2$age, na.rm = T) - min(adult2$age, na.rm = T))
+#write.table(adult2, "/data/uci/adult/adult_cleansing.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+
+## Adult's data cleansing for age
+adult3 <- dplyr::select(adult, age, workclass, education, marital_status, occupation, race, sex, native_country, class)
+age2 <- cut(adult3$age, breaks=c(10,20,30,40,50,60,70,80,90), labels=c("10s","20s", "30s", "40s", "50s", "60s", "70s", "80s"), right=F, include.lowest=T)
+adult3 <- mutate(adult3, age = age2)
+#write.table(adult3, "/data/uci/adult_cleansing2/adult_cleansing2.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+

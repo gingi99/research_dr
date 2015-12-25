@@ -21,6 +21,7 @@ lapply(c("ggplot2"), require, character.only = TRUE)
 lapply(c("DT"), require, character.only = TRUE)
 lapply(c("RoughSets"), require, character.only = TRUE)
 lapply(c("xtable", "psych"), require, character.only = TRUE)
+lapply(c("xtable", "pforeach"), require, character.only = TRUE)
 ```
 
 ## 2. 実験
@@ -28,7 +29,7 @@ lapply(c("xtable", "psych"), require, character.only = TRUE)
 ### 2-1. MLEM2
 ```{r}
 results <- list()
-#kFilenames <- c("hayes-roth", "iris", "wine")
+#kFilenames <- c("hayes-roth", "iris", "wine", "adult_cleansing")
 kFilenames <- c("hayes-roth")
 kIter1 <- 2
 kIter2 <- 5
@@ -47,7 +48,6 @@ for(fn in kFilenames){
       data.test  <- na.omit(data.test)
       data.nominal <- read.csv(paste("/data/uci/",fn,"/",fn,".nominal", sep=""), sep=",", header=F)
       data.nominal <- as.vector(as.matrix(data.nominal))
-      
       
       ## Incert multiple Sample
       source("/home/ooki/R/createData/InsertSample.R")

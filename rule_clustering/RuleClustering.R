@@ -1,8 +1,8 @@
 ## Rule をクラスタリングする
 library(rlist)
-source("~/R/ppdm/cluster.R")
-source("~/R/ppdm/get_PPDM_Measure.R")
-source("~/R/roughsets/My.ObjectFactory.R")
+source("~/ppdm/cluster.R")
+source("~/ppdm/get_PPDM_Measure.R")
+source("~/roughsets/My.ObjectFactory.R")
 
 # ルールの集合rulesをdfに変換する関数
 convert_df_from_rules <- function(rules){
@@ -66,10 +66,14 @@ mergeRules <- function(rule1, rule2){
     ## num
     if(is.numeric(rule1$values[[ind.idx]])){
       # 小さい値
-      # min.value
+      min.value <- min(c(rule1$values[[ind.idx]], rule2$values[[ind.idx]]))
       # 大きい値
-      # max.value
-      # values.list <- list.append(values.list, c(min.value, max.value))
+      max.value <- max(c(rule1$values[[ind.idx]], rule2$values[[ind.idx]]))
+      if(min.value == max.value){
+        list.values.new <- list.append(list.values.new, min.value)        
+      }else{
+        list.values.new <- list.append(list.values.new, c(min.value, max.value))
+      }
     }
     ## nom
     else{

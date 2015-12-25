@@ -1,23 +1,18 @@
-# パス追加
-.libPaths(c("/home/ooki/R/x86_64-pc-linux-gnu-library/3.1", .libPaths()))
-
-#パッケージ
-library(tidyr)
-library(ggplot2)
-library(rlist)
-library(readr)
-library(data.table)
-library(dplyr)
-library(pipeR)
-library(RoughSets)
-library(pforeach)
-
 # 初期設定
 rm(list = ls())
-#kFilenames <- c("hayes-roth", "iris", "wine", "zoo")
-fn <- "wine"
-kIter1 <- 10
-kIter2 <- 10
+
+# 引数取得
+options(echo=TRUE)
+args = commandArgs(trailingOnly = TRUE)
+
+#kFilenames <- c("hayes-roth", "iris", "wine", "zoo", "adult_cleansing")
+fn <- ifelse(is.na(args[1]), "adult_cleansing2", args[1])
+kIter1 <- ifelse(is.na(args[2]), 1, as.numeric(args[2]))
+kIter2 <- ifelse(is.na(args[3]), 10, as.numeric(args[3]))
+
+#パッケージ
+lapply(c("ggplot2", "data.table", "dplyr", "stringr", "tidyr", "rlist", "readr", "pipeR", "RoughSets", "pforeach"), require, character.only = TRUE)
+
 #mgs <- 1
 mgs <- "max"
 rpm <- "Merged"
@@ -25,7 +20,7 @@ rpm <- "Merged"
 kAnomalities <- seq(1, 10, by=1)
 
 # MLEM2 実験
-source("~/R/roughsets/getResults_by_MLEME2.R")
+source("~/roughsets/getResults_by_MLEME2.R")
 
 # kAnomalyiesの実験
 results <- list()
@@ -47,13 +42,13 @@ dt.results <- rbind_list(dt.results, data.table(
   km00 = list.mapv(results[[1]][[1]], precision) %>% unname %>% as.numeric,
   km01 = list.mapv(results[[2]][[1]], precision) %>% unname %>% as.numeric,
   km02 = list.mapv(results[[3]][[1]], precision) %>% unname %>% as.numeric,
-  #km03 = list.mapv(results[[4]][[1]], precision) %>% unname %>% as.numeric,
-  #km04 = list.mapv(results[[5]][[1]], precision) %>% unname %>% as.numeric,
-  #km05 = list.mapv(results[[6]][[1]], precision) %>% unname %>% as.numeric,
-  #km06 = list.mapv(results[[7]][[1]], precision) %>% unname %>% as.numeric,
-  #km07 = list.mapv(results[[8]][[1]], precision) %>% unname %>% as.numeric,
-  #km08 = list.mapv(results[[9]][[1]], precision) %>% unname %>% as.numeric,
-  #km09 = list.mapv(results[[10]][[1]], precision) %>% unname %>% as.numeric,
+  km03 = list.mapv(results[[4]][[1]], precision) %>% unname %>% as.numeric,
+  km04 = list.mapv(results[[5]][[1]], precision) %>% unname %>% as.numeric,
+  km05 = list.mapv(results[[6]][[1]], precision) %>% unname %>% as.numeric,
+  km06 = list.mapv(results[[7]][[1]], precision) %>% unname %>% as.numeric,
+  km07 = list.mapv(results[[8]][[1]], precision) %>% unname %>% as.numeric,
+  km08 = list.mapv(results[[9]][[1]], precision) %>% unname %>% as.numeric,
+  km09 = list.mapv(results[[10]][[1]], precision) %>% unname %>% as.numeric,
   fn   = names(results[[1]])
   )
 )
@@ -131,12 +126,12 @@ dt.entropy %>>%
   inner_join(df.pvalues.entropy, by="var") %>%
   ggplot() +
     geom_boxplot(aes(x=var, y=val, color=tval)) +
-    geom_line(data = dt.entropy %>% gather(var, val, -fn) %>% group_by(fn,var) %>% summarise(m = mean(val)), 
+    geom_line(data = dt.entropy %>% gather(var, val, -fn) %>% group_by(fn,var) %>% dplyr::summarise(m = mean(val)), 
             aes(x=var, y=m, group=1), size=rev(0.8)) +
-    geom_point(data = dt.entropy %>% gather(var, val, -fn) %>% group_by(fn,var) %>% summarise(m = mean(val)), 
+    geom_point(data = dt.entropy %>% gather(var, val, -fn) %>% group_by(fn,var) %>% dplyr::summarise(m = mean(val)), 
              aes(x=var, y=m, group=1), shape=21, size=1.5) +
     facet_grid(fn~.) +
     labs(x="pp cluster value", y="エントロピー") +
-    scale_color_discrete(name="t検定によるp値の結果")-> gg
+    scale_color_discrete(name="t検定によるp値の結果") -> gg
 print(gg)
-ggsave(file="aaa.png", plot=gg, dpi = 320, width = 12, height = 8.52)
+#ggsave(file="aaa.png", plot=gg, dpi = 320, width = 12, height = 8.52)

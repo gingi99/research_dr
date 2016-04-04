@@ -1,15 +1,24 @@
 # coding: utf-8
 # python 3.4
 # Usage : python mlem2.py --f [data.tsv] --nominal [data.nominal]
+import argparse
 import pandas as pd
 import pprint
-import json
 import sys
 from collections import defaultdict
 
 # ---------------------------
 # Parameters
 # ---------------------------
+params = sys.argv
+length = len(params)
+
+parser = argparse.ArgumentParser(description = 'argparse MLEM2')
+parser.add_argument('--f', dest='F', help = '/data/data.tsv', default = ".*")
+args = parser.parse_args()
+
+DECISION_TABLE = args.F
+
 FILENAME = 'hayes-roth'
 DECISION_TABLE = 'hayes-roth'
 DECISION_NOMINAL = 'hayes-roth.nominal'
@@ -31,11 +40,11 @@ class Rule :
    support = list()
 
    def setIdx(self, idxes) :
-      self.idx.append(idxes)
+      self.idx = idxes
    def setValue(self, values) :
-      self.value.append(values)
+      self.value = values
    def setConsequent(self, consequents) :
-      self.consequent.append(consequents)
+      self.consequent = consequents
    def setSupport(self, supports) :
       if not self.support :
           self.support = supports
@@ -49,7 +58,36 @@ class Rule :
       return(self.values)
    def getSupport(self) :
       return(sorted(self.support))
+
+# =====================================
+# avpのsupportをunionしたリストを返す
+# =====================================
+def getAllIdx(list_AttributeValuePairs) :
+    all_idx = list()    
+    for i in list_AttributeValuePairs :
+        all_idx.append(i.getIdx())
+    return(all_idx)
+
+# =====================================
+# avpのsupportをunionしたリストを返す
+# =====================================
+def getAllValue(list_AttributeValuePairs) :
+    all_value = list()    
+    for i in list_AttributeValuePairs :
+        all_value.append(i.getValue())
+    return(all_value)
    
+# =====================================
+# avpのsupportをintersectしたリストを返す
+# =====================================
+def getAllSupport(list_AttributeValuePairs) :
+    all_supports = list() 
+    for i in list_AttributeValuePairs :
+        if not all_supports :
+            all_supports = i.getSupport()
+        else :
+            all_supports = intersect(all_supports, i.getSupport())
+    return(all_supports)
 
 # =====================================
 # filepathからデータを返す関数
@@ -153,23 +191,14 @@ def getAttributeValueParis(decision_table, list_nominal) :
                 #print("no : " + str(j))
     #print(list_attributeValuePairs[0].value)
     return(list_attributeValuePairs)
-        #list_attributeValuePairs[cn] = decision_table[cn].value_counts()
-        #for value in list_descriptors[cn] :
-        #    list_attributeValuePairs2[value] = decision_table[decision_table[cn]==value].index
-    #list_attributeValuePairs2[cn] = decision_table[cn].index
-    #for value in list_descriptors[cn] :
-    #    print value
-    #print list_attributeValuePairs
-    #print list_attributeValuePairs2
-    #del list_descriptors
 
 # ========================================
-# lowerApproximations を返す
+# lowerApproximations を返す：未完成
 # ========================================
 def getApproximations(decision_table) :
     list_lowerApproximations = defaultdict(list)
-    for i in vec_cls.unique() :
-        lowerApproximations[i] = decision_table[decision_table['class']==i].index
+#    for i in vec_cls.unique() :
+#        lowerApproximations[i] = decision_table[decision_table['class']==i].index
     return(list_lowerApproximations)
 #print lowerApproximations
 
@@ -226,6 +255,7 @@ if __name__ == "__main__":
     #print(list_attributeValuePairs[1].getIdx())
 
     # Lower Approximation
+    # バグ la の対象のindexは1始まりなので、治す必要あり
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-3-3.tsv'
     df_la = pd.read_csv(filepath, delimiter='\t')
     list_la = defaultdict(list)
@@ -238,8 +268,9 @@ if __name__ == "__main__":
 
     # 各クラスごとにRuleを求める
     for i in list_la :
+        print("Deicision Class : " + str(i))
         list_concept = list_la[i]
-
+        print("list_concept : " + str(sorted(list_concept)))
         # cocept が空ならStop
         exitEmptyList(list_concept)
 
@@ -258,7 +289,7 @@ if __name__ == "__main__":
             
             # ruleを求める
             count = 0
-            while not rule.getSupport() or not isSuperList(rule.getSupport(), list_concept) :
+            while not list_T or not isSuperList(getAllSupport(list_T), list_concept) :
 
                 bestAttributeValuePair = None
 
@@ -266,7 +297,7 @@ if __name__ == "__main__":
                 print("list_cover_num:" + str(list_cover_num))
 
                 list_TG_max = [ avp for avp in list_TG if len(intersect(list_uncoveredConcept, avp.getSupport())) == max(list_cover_num)]
-                print("list_TG_max:" + str(len(list_TG_max)))
+                print("list_TG_max Number:" + str(len(list_TG_max)))
 
                 if len(list_TG_max) == 1 :
                     bestAttributeValuePair = list_TG_max[0]
@@ -274,34 +305,46 @@ if __name__ == "__main__":
                     minValue = min([len(avp.getSupport()) for avp in list_TG_max ])
                     print("minValue:" + str(minValue))
                     list_TG_min = [ avp for avp in list_TG_max if len(avp.getSupport()) == minValue]
-                    print("list_TG_min:" + str(len(list_TG_min)))
+                    print("list_TG_min Number:" + str(len(list_TG_min)))
                     bestAttributeValuePair = list_TG_min[0]
 
-                # T : T U {t} のところから
+                # T : T U {t} のところ
                 list_T.append(bestAttributeValuePair)
+                print("list_T : " + str(getAllSupport(list_T)))
                 print("best Attribute Pair : "+str(bestAttributeValuePair.getSupport()))
-                #print("rule getSupport1 : "+str(rule.getSupport()))               
-                #rule.setIdx(bestAttributeValuePair.getIdx())
-                #rule.setValue(bestAttributeValuePair.getValue())
-                rule.setSupport(bestAttributeValuePair.getSupport())
-                #print("rule getSupport2 : "+str(rule.getSupport()))
+                
+                # G := [t] ∩ G のところ
+                list_uncoveredConcept = intersect(bestAttributeValuePair.getSupport(), list_uncoveredConcept)
+                print("list_uncoveredConcept : " + str(list_uncoveredConcept))
  
-                # G := [t] ^ G のところ
-                list_uncoveredConcept = intersect(list_uncoveredConcept, rule.getSupport())
-
-                # TG の更新 TG :=  {t : t ^ G}のところ
+                # TG の更新 T(G) :=  {t : t ^ G}のところ
                 list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
+                print("list_TG : " + str(list_TG))
+                print("list_TG : " + str(len(list_TG)))
+                print("list_T : " + str(list_T))           
+                print("list_T : " + str(len(list_T)))
 
                 # T(G) := T(G) - T
                 list_TG = setdiff(list_TG, list_T)
+                print("list_TG : " + str(len(list_TG)))
+ 
                 
-                count = count + 1
-                if count == 2:
-                    break
+                #count = count + 1
+                #if count == 2:
+                #    break
        
             # list_T から不要なものを取り除く
-            
-            # list_T から ruleを作成
+            for avp in list_T :
+                list_T_back = list_T
+                list_T_back.remove(avp)
+                if isSuperList(getAllSupport(list_T_back), list_concept) :
+                    list_T.remove(avp)
+                    
+            # list_T から ruleを作成して、rulesに追加
+            rule.setIdx(getAllIdx(list_T))
+            rule.setValue(getAllValue(list_T))
+            rule.setConsequent(i)
+            rule.setSupport(getAllSupport(list_T))
             rules.append(rule)
 
             #  Gの更新（G := B - [T] のところ)
@@ -313,9 +356,12 @@ if __name__ == "__main__":
             del list_uncoveredConcept[0]
             print("The Number of uncovered Concept : " + str(len(list_uncoveredConcept)))
 
-       # 最後のスクリーニング
-       #for r in rules :
-           
+        # 最後のスクリーニング
+        for r in rules:
+            rules_back = rules
+            rules_back.remove(r)
+            if list_concept == rules_back.getAllSupport() :
+                rules.remove(r)
 	    
     # simplicity conditions	
 

@@ -1,14 +1,19 @@
 # coding: utf-8
-# only python 3.4
+# python 3.4
+# Usage : python mlem2.py --f [data.tsv] --nominal [data.nominal]
 import pandas as pd
 import pprint
 import json
+import sys
 from collections import defaultdict
 
 # ---------------------------
 # Parameters
 # ---------------------------
 FILENAME = 'hayes-roth'
+DECISION_TABLE = 'hayes-roth'
+DECISION_NOMINAL = 'hayes-roth.nominal'
+LOWER_APPROXIMATION = 'hayes-roth-la'
 
 # ---------------------------
 # Option
@@ -21,10 +26,21 @@ pd.set_option('display.max_columns', None)
 # --------------------------
 class Rule :
    idx = list()
-   consequnets = list()
-   values = list()   
+   consequnet = list()
+   value = list()   
    support = list()
 
+   def setIdx(self, idxes) :
+      self.idx.append(idxes)
+   def setValue(self, values) :
+      self.value.append(values)
+   def setConsequent(self, consequents) :
+      self.consequent.append(consequents)
+   def setSupport(self, supports) :
+      if not self.support :
+          self.support = supports
+      else :
+          self.support = intersect(self.support, supports)
    def getIdx(self) :
       return(self.idx)
    def getConsequents(self) :
@@ -32,8 +48,9 @@ class Rule :
    def getValues(self) :
       return(self.values)
    def getSupport(self) :
-      return(self.support)
- 
+      return(sorted(self.support))
+   
+
 # =====================================
 # filepathからデータを返す関数
 # =====================================
@@ -110,7 +127,11 @@ def getAttributeValueParis(decision_table, list_nominal) :
             print("value:" +  str(self.value))
             print("support:" + str(self.support))
         def getIdx(self) :
-            return(self.idx) 
+            return(self.idx)
+        def getAtype(self) :
+            return(self.atype)
+        def getValue(self) :
+            return(self.value)
         def getSupport(self) :
             return(self.support)
 
@@ -125,11 +146,11 @@ def getAttributeValueParis(decision_table, list_nominal) :
                 support_idx = list(decision_table[decision_table[i] == j].index)
                 avp = AttributeValuePairs(ind, "nom", j, support_idx)
                 list_attributeValuePairs.append(avp)
-                print("nominal : " + str(j))
+                #print("nominal : " + str(j))
         else :
              for j in list_descriptors[i] :
                 support_idx = list(decision_table[decision_table[i] == j].index)
-                print("no : " + str(j))
+                #print("no : " + str(j))
     #print(list_attributeValuePairs[0].value)
     return(list_attributeValuePairs)
         #list_attributeValuePairs[cn] = decision_table[cn].value_counts()
@@ -166,6 +187,18 @@ def intersect(list_a, list_b) :
     return(list(set(list_a) & set(list_b)))
 
 # =====================================
+# list 同士のunionを返す
+# =====================================
+def union(list_a, list_b) :
+    return(list(set(list_a) | set(list_b)))
+
+# =====================================
+# list 同士のdiffを返す
+# =====================================
+def setdiff(list_a, list_b) :
+    return(list(set(list_a) - set(list_b)))
+
+# =====================================
 # list a が b に包含されているかを判定する
 # =====================================
 def isSuperList(list_a, list_b) :
@@ -183,13 +216,10 @@ if __name__ == "__main__":
     # read nominal
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = getNominalList(filepath)
-
-    # 属性名
-    print(getColNames(decision_table))
   
     # 属性値集合
     list_descriptors = getDescriptors(decision_table)
-    pp.pprint(list_descriptors)
+    #pp.pprint(list_descriptors)
 
     # AttributeValuePairs
     list_attributeValuePairs = getAttributeValueParis(decision_table, list_nominal)
@@ -202,6 +232,9 @@ if __name__ == "__main__":
     tmp = list(pd.Series(df_la['class']).unique())
     for i in tmp :
         list_la[i] = df_la[df_la['class'] == i]['ind'].values.tolist()
+
+    # Rules の初期設定
+    rules = list()
 
     # 各クラスごとにRuleを求める
     for i in list_la :
@@ -218,6 +251,7 @@ if __name__ == "__main__":
    
             # Rule の初期設定
             rule = Rule()
+            list_T = list()
 
             # TGの候補集合を求める 
             list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
@@ -238,17 +272,52 @@ if __name__ == "__main__":
                     bestAttributeValuePair = list_TG_max[0]
                 else :
                     minValue = min([len(avp.getSupport()) for avp in list_TG_max ])
-                    print("minValuem:" + str(inValue))
+                    print("minValue:" + str(minValue))
                     list_TG_min = [ avp for avp in list_TG_max if len(avp.getSupport()) == minValue]
-                    print("list_TG_min:" + str(list_TG_min))
+                    print("list_TG_min:" + str(len(list_TG_min)))
                     bestAttributeValuePair = list_TG_min[0]
 
                 # T : T U {t} のところから
+                list_T.append(bestAttributeValuePair)
+                print("best Attribute Pair : "+str(bestAttributeValuePair.getSupport()))
+                #print("rule getSupport1 : "+str(rule.getSupport()))               
+                #rule.setIdx(bestAttributeValuePair.getIdx())
+                #rule.setValue(bestAttributeValuePair.getValue())
+                rule.setSupport(bestAttributeValuePair.getSupport())
+                #print("rule getSupport2 : "+str(rule.getSupport()))
+ 
+                # G := [t] ^ G のところ
+                list_uncoveredConcept = intersect(list_uncoveredConcept, rule.getSupport())
 
+                # TG の更新 TG :=  {t : t ^ G}のところ
+                list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
+
+                # T(G) := T(G) - T
+                list_TG = setdiff(list_TG, list_T)
+                
                 count = count + 1
                 if count == 2:
                     break
-                print(count)
-        
+       
+            # list_T から不要なものを取り除く
+            
+            # list_T から ruleを作成
+            rules.append(rule)
+
+            #  Gの更新（G := B - [T] のところ)
+            list_uncoveredConcept = list_concept
+            for r in rules :
+                list_uncoveredConcept = setdiff(list_uncoveredConcept, r.getSupport())
+           
+            # test
             del list_uncoveredConcept[0]
             print("The Number of uncovered Concept : " + str(len(list_uncoveredConcept)))
+
+       # 最後のスクリーニング
+       #for r in rules :
+           
+	    
+    # simplicity conditions	
+
+    # END
+    print(rules)

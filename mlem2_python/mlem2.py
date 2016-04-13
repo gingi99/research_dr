@@ -186,8 +186,19 @@ def getAttributeValueParis(decision_table, list_nominal) :
                 list_attributeValuePairs.append(avp)
                 #print("nominal : " + str(j))
         else :
-             for j in list_descriptors[i] :
-                support_idx = list(decision_table[decision_table[i] == j].index)
+             values = sorted(list_descriptors[i])
+             min_value = min(values)
+             max_value = max(values)
+             for j in range(len(values)-1) :
+                cut_value = (values[j] + values[j+1]) / 2.0
+                ind = list_columns.index(i) + 1
+                support_idx = list(decision_table[decision_table[i] >= min_value and decision_table[i] < cut_value].index)
+                avp = AttributeValuePairs(ind, "num", (min_value, cut_value), support_idx)
+                list_attributeValuePairs.append(avp)
+                support_idx = list(decision_table[decision_table[i] >= cut_value and decision_table[i] < max_value].index)
+                avp = AttributeValuePairs(ind, "num", (cut_value, max_value), support_idx)
+                list_attributeValuePairs.append(avp)
+                
                 #print("no : " + str(j))
     #print(list_attributeValuePairs[0].value)
     return(list_attributeValuePairs)
@@ -201,6 +212,16 @@ def getApproximations(decision_table) :
 #        lowerApproximations[i] = decision_table[decision_table['class']==i].index
     return(list_lowerApproximations)
 #print lowerApproximations
+
+# =====================================
+# 下近似のリストを返す from R
+# =====================================
+def getLowerApproximation(lower_table) :
+    list_la = defaultdict(list)
+    tmp = list(pd.Series(lower_table['class']).unique())
+    for i in tmp :
+        list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
+    return(list_la)
 
 # =======================================
 # list が空ならexit
@@ -233,13 +254,31 @@ def setdiff(list_a, list_b) :
 def isSuperList(list_a, list_b) :
     return(set(list_b).issuperset(set(list_a)))
 
+# =====================================
+# Main 関数
+# =====================================
+def getRulesByMLEM2(FILENAME, iter1, iter2) :
+    
+    # read data
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = getDecisionTable(filepath)
+
+    # read nominal
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = getNominalList(filepath)
+
+
 # ========================================
 # main
 # ========================================
 if __name__ == "__main__":
 
-    # read data 
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train3-3.tsv'
+    FILENAME = 'hayes-roth'
+    iter1 = 10
+    iter2 = 9
+
+    # read data
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = getDecisionTable(filepath)
 
     # read nominal
@@ -255,13 +294,9 @@ if __name__ == "__main__":
     #print(list_attributeValuePairs[1].getIdx())
 
     # Lower Approximation
-    # バグ la の対象のindexは1始まりなので、治す必要あり
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-3-3.tsv'
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
     df_la = pd.read_csv(filepath, delimiter='\t')
-    list_la = defaultdict(list)
-    tmp = list(pd.Series(df_la['class']).unique())
-    for i in tmp :
-        list_la[i] = df_la[df_la['class'] == i]['ind'].values.tolist()
+    list_la = getLowerApproximation(df_la)
 
     # Rules の初期設定
     rules = list()
@@ -282,13 +317,15 @@ if __name__ == "__main__":
    
             # Rule の初期設定
             rule = Rule()
+            
+            # T := 空集合
             list_T = list()
 
             # TGの候補集合を求める 
             list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
             
             # ruleを求める
-            count = 0
+            #count = 0
             while not list_T or not isSuperList(getAllSupport(list_T), list_concept) :
 
                 bestAttributeValuePair = None
@@ -353,8 +390,8 @@ if __name__ == "__main__":
                 list_uncoveredConcept = setdiff(list_uncoveredConcept, r.getSupport())
            
             # test
-            del list_uncoveredConcept[0]
-            print("The Number of uncovered Concept : " + str(len(list_uncoveredConcept)))
+            #del list_uncoveredConcept[0]
+            #print("The Number of uncovered Concept : " + str(len(list_uncoveredConcept)))
 
         # 最後のスクリーニング
         for r in rules:

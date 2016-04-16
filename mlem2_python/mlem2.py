@@ -40,24 +40,29 @@ class Rule :
    support = list()
 
    def setIdx(self, idxes) :
-      self.idx = idxes
+       self.idx = idxes
    def setValue(self, values) :
-      self.value = values
+       self.value = values
    def setConsequent(self, consequents) :
-      self.consequent = consequents
+       self.consequent = consequents
    def setSupport(self, supports) :
-      if not self.support :
-          self.support = supports
-      else :
-          self.support = intersect(self.support, supports)
+       if not self.support :
+           self.support = supports
+       else :
+           self.support = intersect(self.support, supports)
    def getIdx(self) :
-      return(self.idx)
+       return(self.idx)
    def getConsequents(self) :
-      return(self.consequents)
+       return(self.consequents)
    def getValues(self) :
-      return(self.values)
+       return(self.values)
    def getSupport(self) :
-      return(sorted(self.support))
+       return(sorted(self.support))
+   def output(self) :
+       print("idx:" + str(self.idx))
+       print("consequents:" + str(self.consequent))
+       print("value:" +  str(self.value))
+       print("support:" + str(self.support))
 
 # =====================================
 # avpのsupportをunionしたリストを返す
@@ -192,10 +197,10 @@ def getAttributeValueParis(decision_table, list_nominal) :
              for j in range(len(values)-1) :
                 cut_value = (values[j] + values[j+1]) / 2.0
                 ind = list_columns.index(i) + 1
-                support_idx = list(decision_table[decision_table[i] >= min_value and decision_table[i] < cut_value].index)
+                support_idx = list(decision_table[(decision_table[i] < cut_value) & (decision_table[i] >= min_value)].index)
                 avp = AttributeValuePairs(ind, "num", (min_value, cut_value), support_idx)
                 list_attributeValuePairs.append(avp)
-                support_idx = list(decision_table[decision_table[i] >= cut_value and decision_table[i] < max_value].index)
+                support_idx = list(decision_table[(decision_table[i] >= cut_value) & (decision_table[i] <= max_value)].index)
                 avp = AttributeValuePairs(ind, "num", (cut_value, max_value), support_idx)
                 list_attributeValuePairs.append(avp)
                 
@@ -273,9 +278,9 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'hayes-roth'
-    iter1 = 10
-    iter2 = 9
+    FILENAME = 'test'
+    iter1 = 1
+    iter2 = 1
 
     # read data
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -310,7 +315,7 @@ if __name__ == "__main__":
         exitEmptyList(list_concept)
 
         # 初期設定( G = B )
-        list_uncoveredConcept = list_concept 
+        list_uncoveredConcept = list_concept[:] 
         
         ## G が空じゃないならループを続ける
         while list_uncoveredConcept :
@@ -372,9 +377,9 @@ if __name__ == "__main__":
        
             # list_T から不要なものを取り除く
             for avp in list_T :
-                list_T_back = list_T
+                list_T_back = list_T[:]
                 list_T_back.remove(avp)
-                if isSuperList(getAllSupport(list_T_back), list_concept) :
+                if isSuperList(getAllSupport(list_T_back), list_concept) and list_T_back :
                     list_T.remove(avp)
                     
             # list_T から ruleを作成して、rulesに追加
@@ -385,7 +390,7 @@ if __name__ == "__main__":
             rules.append(rule)
 
             #  Gの更新（G := B - [T] のところ)
-            list_uncoveredConcept = list_concept
+            list_uncoveredConcept = list_concept[:]
             for r in rules :
                 list_uncoveredConcept = setdiff(list_uncoveredConcept, r.getSupport())
            
@@ -395,9 +400,9 @@ if __name__ == "__main__":
 
         # 最後のスクリーニング
         for r in rules:
-            rules_back = rules
+            rules_back = rules[:]
             rules_back.remove(r)
-            if list_concept == rules_back.getAllSupport() :
+            if list_concept == getAllSupport(rules_back) :
                 rules.remove(r)
 	    
     # simplicity conditions	

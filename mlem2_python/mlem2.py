@@ -5,7 +5,10 @@ import argparse
 import pandas as pd
 import pprint
 import sys
+import numpy as np
+from itertools import chain
 from collections import defaultdict
+from collections import Counter
 
 # ---------------------------
 # Parameters
@@ -52,18 +55,52 @@ class Rule :
            self.support = intersect(self.support, supports)
    def getIdx(self) :
        return(self.idx)
-   def getConsequents(self) :
-       return(self.consequents)
-   def getValues(self) :
-       return(self.values)
+   def getConsequent(self) :
+       return(self.consequent)
+   def getValue(self) :
+       return(self.value)
    def getSupport(self) :
        return(sorted(self.support))
    def output(self) :
        print("idx:" + str(self.idx))
-       print("consequents:" + str(self.consequent))
+       print("consequent:" + str(self.consequent))
        print("value:" +  str(self.value))
        print("support:" + str(self.support))
 
+# =====================================
+# Rules を見る関数
+# =====================================
+def showRules(list_rules) :
+    for rule in list_rules :
+        rule.output()
+
+# =====================================
+# Rule を Simplity にして返す （未完成）
+# =====================================
+def simplifyRule(rule) :
+    # 重複のidxがあるかチェック。なければruleを返す
+    if not [item for item, count in Counter(rule.getIdx()).items() if count > 1]:
+        return(rule)
+    rule_new = Rule()
+    list_idxes_new = list()
+    list_values_new = list()
+    idxes = rule.getIdx()
+    values = np.array(rule.getValue())
+    uniq_idxes = list(set(idxes))
+    for idx in uniq_idxes :
+        indices = [i for i, x in enumerate(idxes) if x == idx]
+        list_flat = list(chain.from_iterable(values[indices]))
+        min_value = min(list_flat)
+        max_value = max(list_flat)
+        list_idxes_new.append(idx)
+        list_values_new.append((min_value, max_value))
+    # 新しいルールにSet
+    rule_new.setIdx(list_idxes_new)
+    rule_new.setValue(list_values_new)
+    rule_new.setConsequent(rule.getConsequent())
+    rule_new.setSupport(rule.getSupport())
+    return(rule_new)
+    
 # =====================================
 # avpのsupportをunionしたリストを返す
 # =====================================
@@ -100,6 +137,14 @@ def getAllSupport(list_AttributeValuePairs) :
 def getDecisionTable(filepath) :
     decision_table = pd.read_csv(filepath, delimiter='\t')
     return(decision_table)
+
+# =====================================
+# 下近似に属する対象の決定表を返す
+# =====================================
+def getLowerDecisionTable(decision_table, list_la) :
+    values = list(chain.from_iterable(list_la.values()))    
+    decision_table_lower = decision_table.ix[sorted(values)]
+    return(decision_table_lower)
 
 # =====================================
 # filepathからnominal Listを返す
@@ -228,6 +273,16 @@ def getLowerApproximation(lower_table) :
         list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
     return(list_la)
 
+# =====================================
+# 下近似のリストを返す from R
+# =====================================
+def getLowerApproximation(lower_table) :
+    list_la = defaultdict(list)
+    tmp = list(pd.Series(lower_table['class']).unique())
+    for i in tmp :
+        list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
+    return(list_la)
+
 # =======================================
 # list が空ならexit
 # ======================================
@@ -278,18 +333,25 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'test'
+    FILENAME = 'iris'
     iter1 = 1
-    iter2 = 1
+    iter2 = 10
 
-    # read data
+    # read data -> Lower A
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = getDecisionTable(filepath)
+    decision_table = decision_table.dropna()
+    decision_table.index = range(decision_table.shape[0])
 
     # read nominal
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = getNominalList(filepath)
-  
+    
+    # Lower Approximation
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
+    df_la = pd.read_csv(filepath, delimiter='\t')
+    list_la = getLowerApproximation(df_la)
+
     # 属性値集合
     list_descriptors = getDescriptors(decision_table)
     #pp.pprint(list_descriptors)
@@ -297,11 +359,6 @@ if __name__ == "__main__":
     # AttributeValuePairs
     list_attributeValuePairs = getAttributeValueParis(decision_table, list_nominal)
     #print(list_attributeValuePairs[1].getIdx())
-
-    # Lower Approximation
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
-    df_la = pd.read_csv(filepath, delimiter='\t')
-    list_la = getLowerApproximation(df_la)
 
     # Rules の初期設定
     rules = list()
@@ -360,6 +417,7 @@ if __name__ == "__main__":
                 print("list_uncoveredConcept : " + str(list_uncoveredConcept))
  
                 # TG の更新 T(G) :=  {t : t ^ G}のところ
+                list_TG = list()                
                 list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
                 print("list_TG : " + str(list_TG))
                 print("list_TG : " + str(len(list_TG)))
@@ -369,11 +427,7 @@ if __name__ == "__main__":
                 # T(G) := T(G) - T
                 list_TG = setdiff(list_TG, list_T)
                 print("list_TG : " + str(len(list_TG)))
- 
-                
-                #count = count + 1
-                #if count == 2:
-                #    break
+
        
             # list_T から不要なものを取り除く
             for avp in list_T :

@@ -1,196 +1,144 @@
 # coding: utf-8
 # python 3.5
-import pandas as pd
-import pprint
-import sys
-from collections import defaultdict
+from itertools import compress
+from sklearn.metrics import accuracy_score
+import mlem2
 
-# ---------------------------
-# Option
-# ---------------------------
-pp = pprint.PrettyPrinter(indent=4)
-pd.set_option('display.max_columns', None)
+# =====================================
+# list a が b に包含されているかを判定する
+# =====================================
+def isSuperList(list_a, list_b) :
+    return(set(list_b).issuperset(set(list_a)))
 
 
 # ====================================
 # Ruleの1つの条件部が対象を説明するかどうか
 # ====================================
-def isExplainCondition(obj, rule, attr):
-    if 
-    
-    return(True)
+def isExplainNominalCondition(obj, rule, attr):
+    if isSuperList(obj[attr], rule.getValue(attr)):
+        return(True)
+    else :
+        return(False)
+
+# ====================================
+# Ruleの1つの条件部が対象を説明するかどうか
+# ====================================
+def isExplainNumericalCondition(obj, rule, attr):
+    if rule.getValue(attr)[0] <= obj[attr] <= rule.getValue(attr)[1] :
+        return(True)
+    else :
+        return(False)
 
 # ====================================
 # Ruleが対象を説明するかどうか
 # ====================================
-def isExplainRule(obj, rule) :
+def isExplainRule(obj, rule, list_judgeNominal) :
     attributes = rule.getKey()
     for attr in attributes :
-        print(rule.getValue(attr))
+        # nominal なら
+        if list_judgeNominal[attr] :
+            isExplain = isExplainNominalCondition(obj, rule, attr)  
+        # numerical なら
+        else :
+            isExplain = isExplainNumericalCondition(obj, rule, attr)  
+        # 説明できないならFalse        
+        if not isExplain :
+            return(False)
+    return(True)
 
+# ====================================
+# Ruleが対象の条件にマッチする割合(matching_factor)
+# ====================================
+def getMatchingFactor(obj, rule, list_judgeNominal) :
+    matching_factor = 0
+    attributes = rule.getKey()
+    for attr in attributes :
+        # nominal なら
+        if list_judgeNominal[attr] :
+            isExplain = isExplainNominalCondition(obj, rule, attr)  
+        # numerical なら
+        else :
+            isExplain = isExplainNumericalCondition(obj, rule, attr)  
+        # 説明できたら+1        
+        if isExplain :
+            matching_factor += 1
+    matching_factor = matching_factor / len(attributes)      
+    return(matching_factor)
+
+
+# ====================================
+# rulesからsupportDを求める
+# ====================================
+def getSupportD(rule) :
+    return(len(rule.getSupport()) * len(rule.getKey()))
+    
+# ====================================
+# rulesからsupportPを求める
+# ====================================
+def getSupportP(obj, rule, list_judgeNominal) :
+    matching_factor = getMatchingFactor(obj, rule, list_judgeNominal)
+    return(len(rule.getSupport()) * len(rule.getKey()) * matching_factor)
+            
 # ====================================
 # 1 対象のクラスを予測する
 # ====================================
-def predictClass(obj, rules) :
-    print(obj)
-    list_judge = [ for r in rules]
-    for i, v in obj.iteritems():    
-        print(i)
-        print(v)
-    return(len(obj))
-
+def predictClass(obj, rules, list_judgeNominal) :
+    list_judge = [isExplainRule(obj, r, list_judgeNominal) for r in rules]
+    # 1つ以上マッチするなら
+    if any(list_judge) :  
+      consequents = [rules[i].getConsequent() for i, judge in enumerate(list_judge) if judge] 
+      # マッチしたルールが推論するクラスの数がただ1つなら
+      if len(set(consequents)) == 1 :
+          return(consequents[0])
+      else :
+          rules_match = list(compress(rules,list_judge))
+          supportD = [getSupportD(r) for r in rules_match]
+          return(rules_match[supportD.index(max(supportD))].getConsequent())
+    # rule が objに1つもマッチしない場合は部分一致ルールによる推定
+    else : 
+        supportP = [getSupportP(obj, rule, list_judgeNominal) for rule in rules]
+        return(rules[supportP.index(max(supportP))].getConsequent())
+        
 # ====================================
 # LERSによるクラス推定
 # ====================================
-def predictByLERS(rules, decision_table_test) :
-    
-    # 各行に対して予測
-    decision_table_test.apply(lambda row: predictClass(row, rules), axis=1)    
+def predictByLERS(rules, decision_table_test, list_judgeNominal) :
+      
+    # decision_table_testの型を正しくする
+    nominals = list(compress(decision_table_test.columns.tolist(),list_judgeNominal))
+    decision_table_test[nominals] = decision_table_test[nominals].astype(str)
+      
+    # 各行に対して予
+    predictions = decision_table_test.apply(lambda obj: predictClass(obj, rules, list_judgeNominal), axis=1)    
+        
+    # predictionsの型を正しくする
+    predictions = predictions.tolist()    
         
     return(predictions)
-    
     
 # ========================================
 # main
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'iris'
-    iter1 = 1
-    iter2 = 10
+    FILENAME = 'hayes-roth'
+    iter1 = 7
+    iter2 = 5
     
     # rule induction
-    rules = getRulesByMLEM2(FILENAME, iter1, iter2)
+    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
 
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table_test = getDecisionTable(filepath)
-    decision_table_test = decision_table.dropna()
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
     
     # predict by LERS
-    predictions = predict(rules, decision_table_test)
+    predictions = predictByLERS(rules, decision_table_test, list_judgeNominal)
     
-    
-    exit(0)
-    
-    predVec <- pforeach(ind.obj = 1:nrow(data.test), .multicombine=TRUE, .verbose = TRUE)({
-  #for(ind.obj in 1:nrow(data.test)){
-    judges <- sapply(rules, function(rule){
-      idxs <- rule$idx
-      values <- rule$values
-      # bug。なぜかvalues が list()なのがあるのでその回避
-      if(length(values) == 0){
-        return(FALSE)
-      }
-      judge <- TRUE
-      for(ind.idx in 1:length(idxs)){
-        # num 基本条件が1つの条件でルールができている場合
-        if(is.numeric(values[[ind.idx]])){
-          if(data.test[ind.obj,][idxs[ind.idx]] > values[[ind.idx]][1]&
-             data.test[ind.obj,][idxs[ind.idx]] < values[[ind.idx]][2]){
-            judge <- TRUE
-          }else{
-            return(FALSE)
-          }
-        # num 基本条件が区間でルールができている場合
-        # まだ未実装…
-        # nom
-        }else{
-          # 基本条件が複数の条件でルールができている場合
-          if(str_detect(values[[ind.idx]][1], "^\\[.*\\]$")){
-            v <- values[[ind.idx]][1]
-            v <- str_replace_all(v, "^\\[", "")
-            v <- str_replace_all(v, "\\]$", "")
-            v <- str_split(v, ",")[[1]]
-            if(data.test[ind.obj,][idxs[ind.idx]] %in% v){
-              judge <- TRUE
-            }else{
-              return(FALSE)
-            }
-          # 基本条件が1つの条件でルールができている場合
-          }else{
-            if(data.test[ind.obj,][idxs[ind.idx]] == values[[ind.idx]][1]){
-              judge <- TRUE
-            }else{
-              return(FALSE)
-            }
-          }
-        }
-      }
-      return(TRUE)
-    })
-
-    # objにマッチするrule が 1つでもある
-    estimatedClass <- NULL
-    if(any(judges)){
-      # マッチしたルールが1つだけのとき
-      if(length(which(judges)) == 1){
-        estimatedClass <- list.select(rules[which(judges)], consequent) %>% list.mapv(consequent)
-      # マッチしたルールが2つ以上で同じクラスを推定しているとき
-      }else if(length(which(judges)) > 1 & length(unique(list.select(rules[which(judges)], consequent))) == 1){
-        estimatedClass <- unique(list.select(rules[which(judges)], consequent) %>% list.mapv(consequent))
-      # マッチしたルールが2つ以上で別のクラスを推定しているとき
-      }else if(length(which(judges)) > 1 & length(unique(list.select(rules[which(judges)], consequent))) > 1){
-        support_D <- -1
-        for(rule in rules[which(judges)]){
-          strength <- length(rule$support)
-          specificity <- length(rule$values)
-          if((strength * specificity) > support_D){
-            estimatedClass <- rule$consequent
-            support_D <- strength * specificity
-          }
-        }
-      }else{
-        stop("LERS doesn't estimate the decision class")
-      }
-    }
-    # rule が objに1つもマッチしない場合は部分一致ルールによる推定
-    else{
-      p_support <- -1
-      for(rule in rules){
-        strength <- length(rule$support)
-        specificity <- length(rule$values)
-        matching_factor <- 0
-        idxs <- rule$idx
-        values <- rule$values
-        # bug。なぜかvalues が list()なのがあるのでその回避
-        if(length(values) == 0){
-          next
-        }
-        for(ind.idx in 1:length(idxs)){
-          # num
-          if(is.numeric(values[[ind.idx]])){
-            if(data.test[ind.obj,][idxs[ind.idx]] > values[[ind.idx]][1]&
-              data.test[ind.obj,][idxs[ind.idx]] < values[[ind.idx]][2]){
-              matching_factor <- matching_factor + 1
-            }
-          # nom
-          }else{
-            # 基本条件が複数の条件でルールができている場合
-            if(str_detect(values[[ind.idx]][1], "^\\[.*\\]$")){
-              v <- values[[ind.idx]][1]
-              v <- str_replace_all(v, "^\\[", "")
-              v <- str_replace_all(v, "\\]$", "")
-              v <- str_split(v, ",")[[1]]
-              if(data.test[ind.obj,][idxs[ind.idx]] %in% v){
-                matching_factor <- matching_factor + 1
-              }
-            # 基本条件が1つの条件でルールができている場合
-            }else{
-              if(data.test[ind.obj,][idxs[ind.idx]] == values[[ind.idx]][1]){
-                matching_factor <- matching_factor + 1
-              }
-            }
-          }
-        }
-        matching_factor <- matching_factor / length(idxs)
-        if((matching_factor * strength * specificity) > p_support){
-          estimatedClass <- rule$consequent
-          p_support <- matching_factor * strength * specificity
-        }
-      }
-    }
-  #  predVec <- append(predVec, estimatedClass)
-  #}
-    return(estimatedClass)
-  })
-  return(predVec)
+    # 正答率を求める
+    accuracy_score(decision_class, predictions)    

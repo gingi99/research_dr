@@ -49,7 +49,10 @@ class Rule :
    def setValue(self, values) :
        self.value = values
    def setConsequent(self, consequents) :
-       self.consequent = consequents
+       if not self.consequent :
+           self.consequent = consequents
+       else :
+           self.support = union(self.consequent, consequents)
    def setSupport(self, supports) :
        if not self.support :
            self.support = supports
@@ -81,7 +84,10 @@ class Rule2 :
    def setValue(self, key, val) :
        self.value[key] = val
    def setConsequent(self, consequents) :
-       self.consequent = consequents
+      if not self.consequent :
+          self.consequent = consequents
+      else :
+          self.support = union(self.consequent, consequents)
    def setSupport(self, supports) :
        if not self.support :
            self.support = supports
@@ -142,7 +148,7 @@ def convertRule(rule, colnames) :
     rule_new = Rule2()
     # value を setする
     for i, idx in enumerate(rule.getIdx()):
-        rule_new.setValue(colnames[idx], rule.getValue()[i])
+        rule_new.setValue(colnames[idx-1], rule.getValue()[i])
     # consequent と support を setする
     rule_new.setConsequent(rule.getConsequent())
     rule_new.setSupport(rule.getSupport())
@@ -279,7 +285,7 @@ def getAttributeValueParis(decision_table, list_nominal) :
             for j in list_descriptors[i] :
                 ind = list_columns.index(i) + 1
                 support_idx = list(decision_table[decision_table[i] == j].index)
-                avp = AttributeValuePairs(ind, "nom", j, support_idx)
+                avp = AttributeValuePairs(ind, "nom", str(j), support_idx)
                 list_attributeValuePairs.append(avp)
                 #print("nominal : " + str(j))
         else :
@@ -490,8 +496,8 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'iris'
-    iter1 = 1
-    iter2 = 10
+    FILENAME = 'hayes-roth'
+    iter1 = 4
+    iter2 = 5
     
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)

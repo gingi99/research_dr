@@ -68,6 +68,35 @@ class Rule :
        print("value:" +  str(self.value))
        print("support:" + str(self.support))
 
+# --------------------------
+# Rule Class 2
+# --------------------------
+class Rule2 :
+   value = defaultdict(list)  
+   consequnet = list()
+   support = list()
+
+   def setValue(self, idx, val) :
+       self.value[idx] = val
+   def setConsequent(self, consequents) :
+       self.consequent = consequents
+   def setSupport(self, supports) :
+       if not self.support :
+           self.support = supports
+       else :
+           self.support = intersect(self.support, supports)
+   def getValue(self, idx) :
+       return(self.value[idx])
+   def getConsequent(self) :
+       return(self.consequent)
+   def getSupport(self) :
+       return(sorted(self.support))
+   def output(self) :
+       print("value:" + str(self.value))
+       print("consequent:" + str(self.consequent))
+       print("support:" + str(self.support))
+
+
 # =====================================
 # Rules を見る関数
 # =====================================
@@ -101,7 +130,20 @@ def simplifyRule(rule) :
     rule_new.setConsequent(rule.getConsequent())
     rule_new.setSupport(rule.getSupport())
     return(rule_new)
-    
+ 
+# =====================================
+# Rule を idex -> valuesなdefaultdict型にして返す
+# =====================================
+def convertRules(rule) :
+    rule_new = Rule2()
+    # value を setする
+    for i, idx in enumerate(rule.getIdx()):
+        rule_new.setValue(idx, rule.getValue()[i])
+    # consequent と support を setする
+    rule_new.setConsequent(rule.getConsequent())
+    rule_new.setSupport(rule.getSupport())
+    return(rule_new)
+   
 # =====================================
 # avpのsupportをunionしたリストを返す
 # =====================================

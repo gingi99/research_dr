@@ -78,8 +78,8 @@ class Rule2 :
       self.consequent = list()
       self.support = list()
 
-   def setValue(self, idx, val) :
-       self.value[idx] = val
+   def setValue(self, key, val) :
+       self.value[key] = val
    def setConsequent(self, consequents) :
        self.consequent = consequents
    def setSupport(self, supports) :
@@ -87,6 +87,8 @@ class Rule2 :
            self.support = supports
        else :
            self.support = intersect(self.support, supports)
+   def getKey(self) :
+       return(list(self.value.keys()))
    def getValue(self, idx) :
        return(self.value[idx])
    def getConsequent(self) :

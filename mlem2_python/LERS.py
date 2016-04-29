@@ -13,9 +13,27 @@ pd.set_option('display.max_columns', None)
 
 
 # ====================================
+# Ruleの1つの条件部が対象を説明するかどうか
+# ====================================
+def isExplainCondition(obj, rule, attr):
+    if 
+    
+    return(True)
+
+# ====================================
+# Ruleが対象を説明するかどうか
+# ====================================
+def isExplainRule(obj, rule) :
+    attributes = rule.getKey()
+    for attr in attributes :
+        print(rule.getValue(attr))
+
+# ====================================
 # 1 対象のクラスを予測する
 # ====================================
 def predictClass(obj, rules) :
+    print(obj)
+    list_judge = [ for r in rules]
     for i, v in obj.iteritems():    
         print(i)
         print(v)
@@ -24,18 +42,12 @@ def predictClass(obj, rules) :
 # ====================================
 # LERSによるクラス推定
 # ====================================
-def predictByLERS(rules, FILENAME, iter1, iter2) :
+def predictByLERS(rules, decision_table_test) :
     
-    # test data
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table = getDecisionTable(filepath)
-    decision_table = decision_table.dropna()
-    decision_table_index = range(decision_table.shape[0])
-        
     # 各行に対して予測
-    decision_table.apply(lambda row: predictClass(row, rules), axis=1)    
+    decision_table_test.apply(lambda row: predictClass(row, rules), axis=1)    
         
-    return(list_predictions)
+    return(predictions)
     
     
 # ========================================
@@ -47,9 +59,18 @@ if __name__ == "__main__":
     iter1 = 1
     iter2 = 10
     
+    # rule induction
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)
-    predictions = predict(rules, FILENAME, iter1, iter2)
+
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = getDecisionTable(filepath)
+    decision_table_test = decision_table.dropna()
     
+    # predict by LERS
+    predictions = predict(rules, decision_table_test)
+    
+    
+    exit(0)
     
     predVec <- pforeach(ind.obj = 1:nrow(data.test), .multicombine=TRUE, .verbose = TRUE)({
   #for(ind.obj in 1:nrow(data.test)){

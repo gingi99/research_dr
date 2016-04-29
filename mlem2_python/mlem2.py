@@ -38,10 +38,11 @@ pd.set_option('display.max_columns', None)
 # Rule Class
 # --------------------------
 class Rule :
-   idx = list()
-   consequnet = list()
-   value = list()   
-   support = list()
+   def __init__(self):
+       self.idx = list()
+       self.consequnet = list()
+       self.value = list()   
+       self.support = list()
 
    def setIdx(self, idxes) :
        self.idx = idxes
@@ -72,9 +73,10 @@ class Rule :
 # Rule Class 2
 # --------------------------
 class Rule2 :
-   value = defaultdict(list)  
-   consequnet = list()
-   support = list()
+   def __init__(self):
+      self.value = defaultdict(list)  
+      self.consequent = list()
+      self.support = list()
 
    def setValue(self, idx, val) :
        self.value[idx] = val
@@ -134,11 +136,11 @@ def simplifyRule(rule) :
 # =====================================
 # Rule を idex -> valuesなdefaultdict型にして返す
 # =====================================
-def convertRules(rule) :
+def convertRule(rule, colnames) :
     rule_new = Rule2()
     # value を setする
     for i, idx in enumerate(rule.getIdx()):
-        rule_new.setValue(idx, rule.getValue()[i])
+        rule_new.setValue(colnames[idx], rule.getValue()[i])
     # consequent と support を setする
     rule_new.setConsequent(rule.getConsequent())
     rule_new.setSupport(rule.getSupport())
@@ -358,7 +360,6 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
     decision_table = decision_table.dropna()
     decision_table.index = range(decision_table.shape[0])
 
-
     # read nominal
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = getNominalList(filepath)
@@ -474,8 +475,12 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
     # simplicity conditions	
     rules_simple = [simplifyRule(r) for r in rules]
     
+    # Rule2型にconvert
+    colnames = getColNames(decision_table)
+    rules_convert = [convertRule(r,colnames) for r in rules_simple]
+        
     # END
-    return(rules_simple)
+    return(rules_convert)
 
 
 # ========================================

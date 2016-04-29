@@ -1,5 +1,5 @@
 # coding: utf-8
-# python 3.4
+# python 3.5
 # Usage : python mlem2.py --f [data.tsv] --nominal [data.nominal]
 import argparse
 import pandas as pd
@@ -26,6 +26,7 @@ FILENAME = 'hayes-roth'
 DECISION_TABLE = 'hayes-roth'
 DECISION_NOMINAL = 'hayes-roth.nominal'
 LOWER_APPROXIMATION = 'hayes-roth-la'
+
 
 # ---------------------------
 # Option
@@ -75,7 +76,7 @@ def showRules(list_rules) :
         rule.output()
 
 # =====================================
-# Rule を Simplity にして返す （未完成）
+# Rule を Simplity にして返す
 # =====================================
 def simplifyRule(rule) :
     # 重複のidxがあるかチェック。なければruleを返す
@@ -174,7 +175,7 @@ def getColNames(decision_table) :
 # ====================================
 # Nominal な属性をTrue / False で返す
 # ====================================
-def getJudgeNominal(decison_table, list_nominal) :
+def getJudgeNominal(decision_table, list_nominal) :
     list_judge = defaultdict(list)
     list_colnames = list(decision_table.columns)
     index = list(range(1, len(decision_table.columns)+1))
@@ -273,16 +274,6 @@ def getLowerApproximation(lower_table) :
         list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
     return(list_la)
 
-# =====================================
-# 下近似のリストを返す from R
-# =====================================
-def getLowerApproximation(lower_table) :
-    list_la = defaultdict(list)
-    tmp = list(pd.Series(lower_table['class']).unique())
-    for i in tmp :
-        list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
-    return(list_la)
-
 # =======================================
 # list が空ならexit
 # ======================================
@@ -322,39 +313,18 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
     # read data
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = getDecisionTable(filepath)
-
-    # read nominal
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = getNominalList(filepath)
-
-
-# ========================================
-# main
-# ========================================
-if __name__ == "__main__":
-
-    FILENAME = 'iris'
-    iter1 = 1
-    iter2 = 10
-
-    # read data -> Lower A
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table = getDecisionTable(filepath)
     decision_table = decision_table.dropna()
     decision_table.index = range(decision_table.shape[0])
 
+
     # read nominal
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = getNominalList(filepath)
-    
+
     # Lower Approximation
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
     df_la = pd.read_csv(filepath, delimiter='\t')
     list_la = getLowerApproximation(df_la)
-
-    # 属性値集合
-    list_descriptors = getDescriptors(decision_table)
-    #pp.pprint(list_descriptors)
 
     # AttributeValuePairs
     list_attributeValuePairs = getAttributeValueParis(decision_table, list_nominal)
@@ -460,6 +430,19 @@ if __name__ == "__main__":
                 rules.remove(r)
 	    
     # simplicity conditions	
-
+    rules_simple = [simplifyRule(r) for r in rules]
+    
     # END
-    print(rules)
+    return(rules_simple)
+
+
+# ========================================
+# main
+# ========================================
+if __name__ == "__main__":
+
+    FILENAME = 'iris'
+    iter1 = 1
+    iter2 = 10
+    
+    rules = getRulesByMLEM2(FILENAME, iter1, iter2)

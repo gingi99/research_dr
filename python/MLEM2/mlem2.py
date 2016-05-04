@@ -1,7 +1,5 @@
 # coding: utf-8
 # python 3.5
-# Usage : python mlem2.py --f [data.tsv] --nominal [data.nominal]
-import argparse
 import pandas as pd
 import pprint
 import sys
@@ -9,24 +7,6 @@ import numpy as np
 from itertools import chain
 from collections import defaultdict
 from collections import Counter
-
-# ---------------------------
-# Parameters
-# ---------------------------
-params = sys.argv
-length = len(params)
-
-parser = argparse.ArgumentParser(description = 'argparse MLEM2')
-parser.add_argument('--f', dest='F', help = '/data/data.tsv', default = ".*")
-args = parser.parse_args()
-
-DECISION_TABLE = args.F
-
-FILENAME = 'hayes-roth'
-DECISION_TABLE = 'hayes-roth'
-DECISION_NOMINAL = 'hayes-roth.nominal'
-LOWER_APPROXIMATION = 'hayes-roth-la'
-
 
 # ---------------------------
 # Option
@@ -40,7 +20,7 @@ pd.set_option('display.max_columns', None)
 class Rule :
    def __init__(self):
        self.idx = list()
-       self.consequnet = list()
+       self.consequent = list()
        self.value = list()   
        self.support = list()
 
@@ -386,9 +366,9 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
 
     # 各クラスごとにRuleを求める
     for i in list_la :
-        print("Deicision Class : " + str(i))
+        #print("Deicision Class : " + str(i))
         list_concept = list_la[i]
-        print("list_concept : " + str(sorted(list_concept)))
+        #print("list_concept : " + str(sorted(list_concept)))
         # cocept が空ならStop
         exitEmptyList(list_concept)
 
@@ -414,40 +394,40 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
                 bestAttributeValuePair = None
 
                 list_cover_num = [ len(intersect(list_uncoveredConcept, avp.getSupport())) for avp in list_TG ] 
-                print("list_cover_num:" + str(list_cover_num))
+                #print("list_cover_num:" + str(list_cover_num))
 
                 list_TG_max = [ avp for avp in list_TG if len(intersect(list_uncoveredConcept, avp.getSupport())) == max(list_cover_num)]
-                print("list_TG_max Number:" + str(len(list_TG_max)))
+                #print("list_TG_max Number:" + str(len(list_TG_max)))
 
                 if len(list_TG_max) == 1 :
                     bestAttributeValuePair = list_TG_max[0]
                 else :
                     minValue = min([len(avp.getSupport()) for avp in list_TG_max ])
-                    print("minValue:" + str(minValue))
+                    #print("minValue:" + str(minValue))
                     list_TG_min = [ avp for avp in list_TG_max if len(avp.getSupport()) == minValue]
-                    print("list_TG_min Number:" + str(len(list_TG_min)))
+                    #print("list_TG_min Number:" + str(len(list_TG_min)))
                     bestAttributeValuePair = list_TG_min[0]
 
                 # T : T U {t} のところ
                 list_T.append(bestAttributeValuePair)
-                print("list_T : " + str(getAllSupport(list_T)))
-                print("best Attribute Pair : "+str(bestAttributeValuePair.getSupport()))
+                #print("list_T : " + str(getAllSupport(list_T)))
+                #print("best Attribute Pair : "+str(bestAttributeValuePair.getSupport()))
                 
                 # G := [t] ∩ G のところ
                 list_uncoveredConcept = intersect(bestAttributeValuePair.getSupport(), list_uncoveredConcept)
-                print("list_uncoveredConcept : " + str(list_uncoveredConcept))
+                #print("list_uncoveredConcept : " + str(list_uncoveredConcept))
  
                 # TG の更新 T(G) :=  {t : t ^ G}のところ
                 list_TG = list()                
                 list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
-                print("list_TG : " + str(list_TG))
-                print("list_TG : " + str(len(list_TG)))
-                print("list_T : " + str(list_T))           
-                print("list_T : " + str(len(list_T)))
+                #print("list_TG : " + str(list_TG))
+                #print("list_TG : " + str(len(list_TG)))
+                #print("list_T : " + str(list_T))           
+                #print("list_T : " + str(len(list_T)))
 
                 # T(G) := T(G) - T
                 list_TG = setdiff(list_TG, list_T)
-                print("list_TG : " + str(len(list_TG)))
+                #print("list_TG : " + str(len(list_TG)))
 
        
             # list_T から不要なものを取り除く

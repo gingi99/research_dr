@@ -19,6 +19,8 @@ import LERS
 # ====================================
 def MLEM2_LERS(FILENAME, iter1, iter2) :
       
+    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))     
+      
     # rule induction
     rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
 
@@ -43,7 +45,7 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
 # listの平均と分散を求める
 # ========================================
 def getEvalMeanVar(result):
-    ans = '{mean}±{std}'.format(mean=round(np.mean(results),3), std=round(np.std(results),3))
+    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(results),3)), std=('%.3f' % round(np.std(results),3)))
     return(ans)
 
 # ========================================

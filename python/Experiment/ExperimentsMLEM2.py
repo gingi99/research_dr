@@ -5,6 +5,8 @@ from sklearn.metrics import accuracy_score
 from multiprocessing import Pool
 from multiprocessing import freeze_support
 import numpy as np
+import logging
+logging.basicConfig(filename='ExpermentsMLEM2.log',format='%(asctime)s %(message)s',level=logging.DEBUG)
 import sys
 import os
 #sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
@@ -18,9 +20,7 @@ import LERS
 # MLEM2 - LERS による正答率実験
 # ====================================
 def MLEM2_LERS(FILENAME, iter1, iter2) :
-      
-    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))     
-      
+          
     # rule induction
     rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
 
@@ -39,6 +39,10 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     
     # 正答率を求める
     accuracy = accuracy_score(decision_class, predictions)
+    
+    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
+    logging.info('Success : {FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))
+    
     return(accuracy)
 
 # ========================================
@@ -75,7 +79,7 @@ def multi_main(proc,FILENAMES):
 # ========================================
 if __name__ == "__main__":
 
-    FILENAMES = ['hayes-roth']    
+    FILENAMES = ['nursery']    
 
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -88,7 +92,7 @@ if __name__ == "__main__":
     results = multi_main(proc, FILENAMES)
     
     # 平均と分散
-    print(getEvalMeanVar(results)) 
+    print(getEvalMeanVar(results))
     
     # 保存する
-    #saveResults(results, "/data/uci/hayes-roth/accuracy.txt")
+    saveResults(results, "/data/uci/hayes-roth/accuracy.txt")

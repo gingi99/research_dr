@@ -78,7 +78,10 @@ def multi_main(proc,FILENAMES):
 # ========================================
 if __name__ == "__main__":
 
-    FILENAMES = ['hayes-roth']    
+    #FILENAMES = ['hayes-roth']    
+    #rules = 
+    rules = mlem2.getRulesByMLEM2('hayes-roth', 2, 2)
+
 
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    

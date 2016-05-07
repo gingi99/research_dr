@@ -1,10 +1,12 @@
 # coding: utf-8
 # python 3.5
 import pandas as pd
+import numpy as np
 import pprint
 import sys
-import numpy as np
 from itertools import chain
+from itertools import combinations
+from itertools import product
 from collections import defaultdict
 from collections import Counter
 
@@ -93,6 +95,69 @@ class Rule2 :
 def showRules(list_rules) :
     for rule in list_rules :
         rule.output()
+
+# =====================================
+# Rules の Supportの平均数
+# =====================================
+def getMeanSupport(list_rules) :
+    supports = [len(r.getSupport()) for r in list_rules]
+    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(supports),3)), std=('%.3f' % round(np.std(supports),3)))
+    return(ans)
+
+# =====================================
+# Rules の Ruleの長さの平均数
+# =====================================
+def getMeanLength(list_rules) :
+    lengths = [len(r.getKey()) for r in list_rules]
+    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(lengths),3)), std=('%.3f' % round(np.std(lengths),3)))
+    return(ans)
+
+# =====================================
+# Rules のうち k-Supportを満たす割合
+# =====================================
+def getPerKRules(list_rules, k) :
+    k_rules = [r for r in list_rules if len(r.getSupport()) >= k]
+    ans = len(k_rules) / len(rules)
+    return(ans)
+
+# =====================================
+# Rules が推定するクラス
+# =====================================    
+def getEstimatedClass(list_rules) :
+    consequents = list(set(r.getConsequent() for r in list_rules))
+    return(consequents)
+    
+# =====================================
+# Rules のうち、P個の属性値が分かれば、クラスを推定できるか
+# =====================================
+def getPerIdentifiedClass(list_rules, p) :         
+    #list_conditions = [(k,v) for k,values in ruleAttributeValuePairs.items() for v in values]
+    
+    ruleAttributeValuePairs = defaultdict(set)            
+    for r in list_rules :
+        for k,v in r.value.items() :
+            print(k,v)
+            ruleAttributeValuePairs[k].add(v)
+
+    rule_attributes = [r.getKey() for r in list_rules]
+    attributes = tuple(set(chain.from_iterable(rule_attributes)))
+    combi_attributes = list(combinations(attributes,p))
+    count = 0
+    bunbo = 0
+    for combi in combi_attributes :
+        list_combi = [list(ruleAttributeValuePairs[c]) for c in combi]
+        list_combi_product = list(product(*list_combi))
+        bunbo += len(list_combi_product)
+        for lc in list_combi_product:
+            rules_target = list()        
+            for (i, c) in enumerate(combi):
+                for r in list_rules :
+                    if r.getValue(c) == lc[i] :
+                        rules_target.append(r) 
+            if len(getEstimatedClass(rules_target)) == 1 :
+                count += 1
+    ans = (count / bunbo)
+    return(ans)
 
 # =====================================
 # Rule を Simplity にして返す

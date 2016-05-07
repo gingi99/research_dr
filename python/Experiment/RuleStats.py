@@ -15,35 +15,6 @@ import mlem2
 #importlib.reload(mlem2)  
 import LERS
 
-# ====================================
-# MLEM2 - LERS による正答率実験
-# ====================================
-def MLEM2_LERS(FILENAME, iter1, iter2) :
-          
-    # rule induction
-    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
-
-    # test data setup
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table_test = mlem2.getDecisionTable(filepath)
-    decision_table_test = decision_table_test.dropna()
-    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
-
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = mlem2.getNominalList(filepath)
-    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
-    
-    # predict by LERS
-    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
-    
-    # 正答率を求める
-    accuracy = accuracy_score(decision_class, predictions)
-    
-    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('MLEM2-LERS,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
-    
-    return(accuracy)
-
 # ========================================
 # listの平均と分散を求める
 # ========================================
@@ -70,7 +41,7 @@ def multi_main(proc,FILENAMES):
     for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
         multiargs.append((FILENAME,iter1,iter2))
   
-    results = pool.starmap(MLEM2_LERS, multiargs)
+    #results = pool.starmap(MLEM2_LERS, multiargs)
     return(results)
       
 # ========================================

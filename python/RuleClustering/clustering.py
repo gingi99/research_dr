@@ -59,27 +59,17 @@ class Rule :
 # --------------------------
 class Rule2 :
    def __init__(self):
-       self.value = defaultdict(list)  
-       self.consequent = list()
-       self.support = list()
+      self.value = defaultdict(list)  
+      self.consequent = list()
+      self.support = list()
 
    def setValue(self, key, val) :
-       #if not self.value[key] : self.value[key] = [val]
-       #else : self.value[key].append(val)
-       if type(val) == str :
-           if val in self.value[key] : pass
-           else : self.value[key].append(val)
-       elif type(val) == list :
-           self.value[key] = union(self.value[key],val)
-       elif type(val) == tuple :
-           print("tuple ha mada")
+       self.value[key] = val
    def setConsequent(self, consequents) :
-       #if not self.consequent :
-       #    self.consequent = consequents
-       #else :
-       #    self.consequent = union(self.consequent, consequents)
-       if consequents in self.consequent : pass
-       else : self.consequent.append(consequents)
+      if not self.consequent :
+          self.consequent = consequents
+      else :
+          self.support = union(self.consequent, consequents)
    def setSupport(self, supports) :
        if not self.support :
            self.support = supports
@@ -88,16 +78,9 @@ class Rule2 :
    def getKey(self) :
        return(list(self.value.keys()))
    def getValue(self, idx) :
-       if not idx in self.getKey(): 
-           return(None)
-       else: 
-           i = iter(self.value[idx])
-           if any(i) and not any(i) : return(self.value[idx][0])
-           else : return(self.value[idx])
+       return(self.value[idx])
    def getConsequent(self) :
-       i = iter(self.consequent)
-       if any(i) and not any(i) : return(self.consequent[0])
-       else : return(self.consequent)
+       return(self.consequent)
    def getSupport(self) :
        return(sorted(self.support))
    def output(self) :
@@ -119,14 +102,6 @@ def showRules(list_rules) :
 def getMeanSupport(list_rules) :
     supports = [len(r.getSupport()) for r in list_rules]
     ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(supports),3)), std=('%.3f' % round(np.std(supports),3)))
-    return(ans)
-
-# =====================================
-# Rules の Supportの平均数
-# =====================================
-def getMinSupport(list_rules) :
-    supports = [len(r.getSupport()) for r in list_rules]
-    ans = np.min(supports)
     return(ans)
 
 # =====================================
@@ -428,139 +403,254 @@ def isSuperList(list_a, list_b) :
     return(set(list_b).issuperset(set(list_a)))
 
 # =====================================
+# list a が b に または、b が a に包含されているかを判定する
+# =====================================
+def isEitherSuperList(list_a, list_b) :
+    return(set(list_b).issuperset(set(list_a)) or set(list_a).issuperset(set(list_b)))
+
+# =====================================
+# Rule 間の類似度を返す関数
+# =====================================
+def getSimilarity(rule1, rule2, colnames, list_judgeNominal) :
+    similarity = 0
+    for col in colnames :
+        # 両要素ともNAなら、0.5
+        if (not rule1.getValue(col)) and (not rule2.getValue(col)) :       
+            similarity += 0.5 
+            print("0.5")
+            continue
+        # どちらかがNAなら、0
+        if (not rule1.getValue(col)) or (not rule2.getValue(col)) :
+            similarity += 0
+            print("0")
+            continue
+        # 名義属性なら
+        if list_judgeNominal[col] :
+            # 包含関係があるなら
+            if isEitherSuperList(rule1.getValue(col), rule2.getValue(col)):
+                similarity += 1.0
+                print("1")
+            else :
+                similarity += 1/3
+                print("1/3")
+        # 数値属性なら
+        else :
+            print("suuchi ha mada")
+            #v <- 1.0 - (x[[i]] - y[[i]])/(3.0 * sd)
+            #if(v < 0.0){
+                #v <- 0
+            #}
+            similarity += 0
+    similarity /= len(colnames)
+    return(similarity)
+
+# =====================================
+# 2つのRuleを併合する関数：数値属性のときのsetValueはまだ実装できていない
+# =====================================
+def mergeRule(rule1, rule2):
+    
+    merge_rule = mlem2.Rule2()    
+    
+    # 2つのルールに両方持つ条件属性集合を抽出
+    common_keys = intersect(rule1.getKey(), rule2.getKey())
+    
+    # 共通の条件属性がないなら
+    if not common_keys :
+        union_keys = union(rule1.getKey(), rule2.getKey())
+        for key in union_keys :
+            if rule1.getValue(key) != None : merge_rule.setValue(key, rule1.getValue(key))
+            if rule2.getValue(key) != None : merge_rule.setValue(key, rule2.getValue(key))
+    
+    # 1つ以上共通の条件属性があるなら
+    else :
+        for key in common_keys :
+            if rule1.getValue(key) != None : merge_rule.setValue(key, rule1.getValue(key))
+            if rule2.getValue(key) != None : merge_rule.setValue(key, rule2.getValue(key))
+    
+    # consequent 
+    merge_rule.setConsequent(rule1.getConsequent())
+    merge_rule.setConsequent(rule2.getConsequent())
+    
+    # support数の計算
+    merge_rule.setSupport(union(rule1.getSupport(), rule2.getSupport()))
+      
+    return(merge_rule)    
+
+# =====================================
 # Main 関数
 # =====================================
-def getRulesByMLEM2(FILENAME, iter1, iter2) :
+def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
     
-    # read data
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table = getDecisionTable(filepath)
-    decision_table = decision_table.dropna()
-    decision_table.index = range(decision_table.shape[0])
+    rules_neww = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        target_rules = [r for r in rules if r.getConsequent() == cls]
 
-    # read nominal
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = getNominalList(filepath)
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(rules) 
+        while min_support >= k :
 
-    # Lower Approximation
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
-    df_la = pd.read_csv(filepath, delimiter='\t')
-    list_la = getLowerApproximation(df_la)
+            # target_rules が 1つなら
+            if len(target_rules) == 1 :
+                # 処理をかく
 
-    # AttributeValuePairs
-    list_attributeValuePairs = getAttributeValueParis(decision_table, list_nominal)
-    #print(list_attributeValuePairs[1].getIdx())
+            # rulesの各組み合わせに対する類似度を求める
+            combi_rule = list(combinations(tuple(target_rules),2))
+            list_similarities = [getSimilarity(combi[0], combi[1], colnames, list_judgeNominal) for combi in combi_rule]
 
-    # Rules の初期設定
-    rules = list()
-
-    # 各クラスごとにRuleを求める
-    for i in list_la :
-        #print("Deicision Class : " + str(i))
-        list_concept = list_la[i]
-        #print("list_concept : " + str(sorted(list_concept)))
-        # cocept が空ならStop
-        exitEmptyList(list_concept)
-
-        # 初期設定( G = B )
-        list_uncoveredConcept = list_concept[:] 
         
-        ## G が空じゃないならループを続ける
-        while list_uncoveredConcept :
+        rules_new.extend(target_rules)
+        
+    return(rules_new)
+    
+    
+# =============
+
+## ルール間の距離から、ルールを併合して新しいルールを作る
+recreate_rules_by_dist <- function(rules, k=3){
+  # 初期化
+  rules.new <- rules
+  
+  # ルール群のサポート値の最小値を求める
+  vec.supportsize <- sapply(rules, function(rule){
+    return(length(rule$support))
+  })
+  minSupportValue <- min(vec.supportsize)
+  
+  # support sizeがk以下のルールがある内は繰り返す
+  while(minSupportValue < k){
+    ind.minValue <- which(vec.supportsize == minSupportValue)
+    if(length(ind.minValue) == 1){
+      ind.merge.target.rule <- ind.minValue
+    }else{
+      ind.merge.target.rule <- ind.minValue[1]
+    }
+    
+    # 同じ結論部のルールを求める
+    vec.same.consequents <- sapply(rules.new, function(rule){
+      return(rule$consequent == rules.new[[ind.merge.target.rule]]$consequent)
+    })
+    
+    # ルール間の類似度を求める
+    mat.df.dist <- cal_dist_rules(convert_df_from_rules(rules.new))
+    for(di in 1:length(rules.new)){
+      mat.df.dist[di, di] <- 0
+    }
+    # merge target ルールとの類似度を求める
+    vec.dist <- mat.df.dist[ind.merge.target.rule,] 
+    
+    # 異なる結論部のルールは除外
+    vec.dist[!vec.same.consequents] <- -1
+    
+    # vec.distがすべて -1 = 異なる結論部のルールが無い場合は、そのind.merge.target.ruleは削除する
+    if(all(vec.dist == -1)){
+      rules.new <- rules.new[-c(ind.merge.target.rule)]
+      vec.supportsize <- sapply(rules.new, function(rule){
+        return(length(rule$support))
+      })
+      print("各ルールのsupport値:")
+      print(vec.supportsize)
+      minSupportValue <- min(vec.supportsize)
+      
+      # attributeをつける
+      attr(rules.new, "uniqueCls") <- attributes(rules)$uniqueCls
+      attr(rules.new, "clsProbs") <- attributes(rules)$clsProbs
+      attr(rules.new, "majorityCls") <- attributes(rules)$majorityCls
+      attr(rules.new, "method") <- "MLEM2Rules"
+      attr(rules.new, "dec.attr") <- attributes(rules)$dec.attr
+      attr(rules.new, "colnames") <- attributes(rules)$colnames
+      
+      # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
+      rules.new <- My.ObjectFactory(rules.new, classname = "RuleSetRST")
+      next
+    }
+    
+    # merge target ルールと同じ条件属性のあるものを判定
+    vec.judge.condition <- sapply(rules.new, function(rule){
+      return(length(intersect(rule$idx, rules.new[[ind.merge.target.rule]]$idx)) > 0)
+    })
+    
+    # vec.distを同じ条件属性のあるルールだけに限定して最大類似度を求める。しかし、同じ条件属性がない場合は、気にせずにマージする
+    maxDistValue <- max(vec.dist[vec.judge.condition])
+    if(maxDistValue == 0){
+      maxDistValue <- max(vec.dist)
+    }
+    
+    # 最も類似度が大きいルールを求める
+    ind.maxDistValue <- which(vec.dist == maxDistValue)
+    if(length(ind.maxDistValue) == 1){
+      ind.merge.target.rule2 <- ind.maxDistValue
+      rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
+    }else{
+      # 結論部が同じルールかどうか
+      vec.consequent <- sapply(ind.maxDistValue, function(x){
+        return(rules.new[[x]]$consequent)
+      })
+      ind.maxConsequentValue <- ind.maxDistValue[vec.consequent == rules.new[[ind.merge.target.rule]]$consequent]
+      # 結論部が同じルールが1つ
+      if(length(ind.maxConsequentValue) == 1){
+        ind.merge.target.rule2 <- ind.maxConsequentValue
+        rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
+      # 結論部が同じルールが2つ以上 or ない
+      }else{
+        # ないなら、類似度が大きいルールを再度入れなおす
+        if(length(ind.maxConsequentValue) == 0){
+          ind.maxConsequentValue <- ind.maxDistValue
+        }
+        # 条件部を構成する属性名がなるべく同じであるか
+        vec.match.length.idx <- sapply(ind.maxConsequentValue, function(x){
+          return(length(intersect(rules.new[[x]]$idx, rules.new[[ind.merge.target.rule]]$idx)))
+        })
+        maxConditionValue <- max(vec.match.length.idx)
+        ind.maxConditionValue <- ind.maxConsequentValue[vec.match.length.idx == maxConditionValue]
+        if(length(ind.maxConditionValue) == 1){
+          ind.merge.target.rule2 <- ind.maxConditionValue
+          rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
+        }else{
+          # support sizeが小さいルールとマージする
+          vec.supportsize <- sapply(rules.new[ind.maxConditionValue], function(rule){
+            return(length(rule$support))
+          })
+          minSupportValue <- min(vec.supportsize)
+          ind.minSupportValue <- ind.maxConditionValue[which(vec.supportsize == minSupportValue)]
+          if(length(ind.minSupportValue) == 1){
+            ind.merge.target.rule2 <- ind.minSupportValue
+            rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
+          }else{
+            # なければ、候補ルールの中の最初のルールとマージする
+            ind.merge.target.rule2 <- ind.minSupportValue[1]
+            rule.new <- mergeRules(rules.new[[ind.merge.target.rule]], rules.new[[ind.merge.target.rule2]])
+          }
+        }
+      }
+    }
+    rules.new <- rules.new[-c(ind.merge.target.rule, ind.merge.target.rule2)]
+    rules.new <- list.append(rules.new, rule.new)
+    vec.supportsize <- sapply(rules.new, function(rule){
+      return(length(rule$support))
+    })
+    print("各ルールのsupport値:")
+    print(vec.supportsize)
+    minSupportValue <- min(vec.supportsize)
+    
+    # attributeをつける
+    attr(rules.new, "uniqueCls") <- attributes(rules)$uniqueCls
+    attr(rules.new, "clsProbs") <- attributes(rules)$clsProbs
+    attr(rules.new, "majorityCls") <- attributes(rules)$majorityCls
+    attr(rules.new, "method") <- "MLEM2Rules"
+    attr(rules.new, "dec.attr") <- attributes(rules)$dec.attr
+    attr(rules.new, "colnames") <- attributes(rules)$colnames
+    
+    # RuleSetRSTクラスを付与し、rulesの記述を指定フォーマットに変える
+    rules.new <- My.ObjectFactory(rules.new, classname = "RuleSetRST")
+  }
+  return(rules.new)
+}
+
    
-            # Rule の初期設定
-            rule = Rule()
-            
-            # T := 空集合
-            list_T = list()
-
-            # TGの候補集合を求める 
-            list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
-            
-            # ruleを求める
-            #count = 0
-            while not list_T or not isSuperList(getAllSupport(list_T), list_concept) :
-
-                bestAttributeValuePair = None
-
-                list_cover_num = [ len(intersect(list_uncoveredConcept, avp.getSupport())) for avp in list_TG ] 
-                #print("list_cover_num:" + str(list_cover_num))
-
-                list_TG_max = [ avp for avp in list_TG if len(intersect(list_uncoveredConcept, avp.getSupport())) == max(list_cover_num)]
-                #print("list_TG_max Number:" + str(len(list_TG_max)))
-
-                if len(list_TG_max) == 1 :
-                    bestAttributeValuePair = list_TG_max[0]
-                else :
-                    minValue = min([len(avp.getSupport()) for avp in list_TG_max ])
-                    #print("minValue:" + str(minValue))
-                    list_TG_min = [ avp for avp in list_TG_max if len(avp.getSupport()) == minValue]
-                    #print("list_TG_min Number:" + str(len(list_TG_min)))
-                    bestAttributeValuePair = list_TG_min[0]
-
-                # T : T U {t} のところ
-                list_T.append(bestAttributeValuePair)
-                #print("list_T : " + str(getAllSupport(list_T)))
-                #print("best Attribute Pair : "+str(bestAttributeValuePair.getSupport()))
-                
-                # G := [t] ∩ G のところ
-                list_uncoveredConcept = intersect(bestAttributeValuePair.getSupport(), list_uncoveredConcept)
-                #print("list_uncoveredConcept : " + str(list_uncoveredConcept))
- 
-                # TG の更新 T(G) :=  {t : t ^ G}のところ
-                list_TG = list()                
-                list_TG = [avp for avp in list_attributeValuePairs if intersect(list_uncoveredConcept, avp.getSupport())]
-                #print("list_TG : " + str(list_TG))
-                #print("list_TG : " + str(len(list_TG)))
-                #print("list_T : " + str(list_T))           
-                #print("list_T : " + str(len(list_T)))
-
-                # T(G) := T(G) - T
-                list_TG = setdiff(list_TG, list_T)
-                #print("list_TG : " + str(len(list_TG)))
-
-       
-            # list_T から不要なものを取り除く
-            for avp in list_T :
-                list_T_back = list_T[:]
-                list_T_back.remove(avp)
-                if isSuperList(getAllSupport(list_T_back), list_concept) and list_T_back :
-                    list_T.remove(avp)
-                    
-            # list_T から ruleを作成して、rulesに追加
-            rule.setIdx(getAllIdx(list_T))
-            rule.setValue(getAllValue(list_T))
-            rule.setConsequent(i)
-            rule.setSupport(getAllSupport(list_T))
-            rules.append(rule)
-
-            #  Gの更新（G := B - [T] のところ)
-            list_uncoveredConcept = list_concept[:]
-            for r in rules :
-                list_uncoveredConcept = setdiff(list_uncoveredConcept, r.getSupport())
-           
-            # test
-            #del list_uncoveredConcept[0]
-            #print("The Number of uncovered Concept : " + str(len(list_uncoveredConcept)))
-
-        # 最後のスクリーニング
-        for r in rules:
-            rules_back = rules[:]
-            rules_back.remove(r)
-            if list_concept == getAllSupport(rules_back) :
-                rules.remove(r)
-	    
-    # simplicity conditions	
-    rules_simple = [simplifyRule(r) for r in rules]
-    
-    # Rule2型にconvert
-    colnames = getColNames(decision_table)
-    rules_convert = [convertRule(r,colnames) for r in rules_simple]
+   
         
-    # END
-    return(rules_convert)
-
-
 # ========================================
 # main
 # ========================================
@@ -570,4 +660,18 @@ if __name__ == "__main__":
     iter1 = 4
     iter2 = 5
     
-    rules = getRulesByMLEM2(FILENAME, iter1, iter2)
+    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+    
+    rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
+
+
+
+

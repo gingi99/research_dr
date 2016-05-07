@@ -10,9 +10,9 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../MLEM2')
 import logging
 logging.basicConfig(filename=os.path.dirname(os.path.abspath(__file__))+'/ExperimentsMLEM2.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
-#import importlib
+import importlib
 import mlem2
-#importlib.reload(mlem2)  
+importlib.reload(mlem2)  
 import LERS
 
 # ====================================

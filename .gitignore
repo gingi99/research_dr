@@ -1,2 +1,6 @@
+__pycache__/
+*.pyc
+*.json
+*.pkl
 *.log
 .spyderworkspace

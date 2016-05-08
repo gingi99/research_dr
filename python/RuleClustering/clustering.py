@@ -1,5 +1,6 @@
 # coding: utf-8
 # python 3.5
+from sklearn.metrics import accuracy_score
 import numpy as np
 import sys
 import os
@@ -7,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../MLEM2')
 import importlib
 import mlem2
 importlib.reload(mlem2)  
+import LERS
 
 # =====================================
 # list同士のintersectを返す
@@ -203,6 +205,14 @@ if __name__ == "__main__":
     
     rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
 
+    # predict by LERS
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+    
+    predictions = LERS.predictByLERS(rules_new, decision_table_test, list_judgeNominal)
+    print(accuracy_score(decision_class, predictions))  
 
 
 

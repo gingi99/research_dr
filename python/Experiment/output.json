@@ -1,0 +1,24 @@
+{"support": ["1", "11", "52", "89", "97", "112", "119", "128", "130", "138"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "2.0"}, {"educational level": "1.0"}]}
+{"support": ["33", "34", "53", "59", "61", "87", "101", "105", "124", "135"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "1.0"}, {"educational level": "2.0"}]}
+{"support": ["0", "29", "45", "51", "58", "76", "84", "100"], "consequent": ["1"], "value": [{"marital status": "2.0"}, {"age": "1.0"}, {"educational level": "1.0"}]}
+{"support": ["65", "125"], "consequent": ["1"], "value": [{"marital status": "3.0"}, {"age": "1.0"}, {"educational level": "3.0"}]}
+{"support": ["77", "120"], "consequent": ["1"], "value": [{"marital status": "3.0"}, {"age": "1.0"}, {"educational level": "1.0"}]}
+{"support": ["5", "14"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "3.0"}, {"educational level": "3.0"}]}
+{"support": ["109", "132"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "3.0"}, {"educational level": "1.0"}]}
+{"support": ["127"], "consequent": ["1"], "value": [{"marital status": "3.0"}, {"age": "3.0"}, {"educational level": "3.0"}]}
+{"support": ["26", "93"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "1.0"}, {"educational level": "3.0"}]}
+{"support": ["141"], "consequent": ["1"], "value": [{"marital status": "3.0"}, {"age": "3.0"}, {"educational level": "1.0"}]}
+{"support": ["95"], "consequent": ["1"], "value": [{"marital status": "1.0"}, {"age": "1.0"}, {"educational level": "1.0"}]}
+{"support": ["20", "21", "22", "37", "42", "46", "57", "81", "115", "136", "140"], "consequent": ["2"], "value": [{"marital status": "2.0"}, {"age": "2.0"}, {"educational level": "1.0"}]}
+{"support": ["24", "44", "49", "62", "67", "83", "86", "98", "102", "133", "134"], "consequent": ["2"], "value": [{"marital status": "2.0"}, {"age": "1.0"}, {"educational level": "2.0"}]}
+{"support": ["2", "4", "9", "12", "13", "30", "66", "73", "74", "85", "99"], "consequent": ["2"], "value": [{"marital status": "1.0"}, {"age": "2.0"}, {"educational level": "2.0"}]}
+{"support": ["63", "78", "107", "110"], "consequent": ["2"], "value": [{"hobby": "1.0"}, {"age": "2.0"}, {"educational level": "3.0"}]}
+{"support": ["79", "94", "142"], "consequent": ["2"], "value": [{"hobby": "1.0"}, {"marital status": "2.0"}, {"age": "3.0"}]}
+{"support": ["25", "126"], "consequent": ["2"], "value": [{"marital status": "3.0"}, {"age": "3.0"}, {"educational level": "2.0"}]}
+{"support": ["72", "142"], "consequent": ["2"], "value": [{"marital status": "2.0"}, {"age": "3.0"}, {"educational level": "3.0"}]}
+{"support": ["27", "78"], "consequent": ["2"], "value": [{"marital status": "2.0"}, {"age": "2.0"}, {"educational level": "3.0"}]}
+{"support": ["2", "12", "13", "30", "74", "111", "116"], "consequent": ["2"], "value": [{"hobby": "1.0"}, {"age": "2.0"}, {"educational level": "2.0"}]}
+{"support": ["24", "44", "67", "86", "123"], "consequent": ["2"], "value": [{"hobby": "3.0"}, {"marital status": "2.0"}, {"educational level": "2.0"}]}
+{"support": ["17", "28", "38", "60", "75", "96", "106", "118", "121", "143"], "consequent": ["3"], "value": [{"marital status": "4.0"}]}
+{"support": ["3", "48", "71", "92", "96", "103", "122", "131", "143"], "consequent": ["3"], "value": [{"age": "4.0"}]}
+{"support": ["6", "7", "8", "32", "91", "108", "121", "139", "143"], "consequent": ["3"], "value": [{"educational level": "4.0"}]}

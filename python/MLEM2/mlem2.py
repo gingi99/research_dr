@@ -3,6 +3,8 @@
 import pandas as pd
 import numpy as np
 import pprint
+import json
+import pickle
 import sys
 from itertools import chain
 from itertools import combinations
@@ -112,6 +114,44 @@ class Rule2 :
 def showRules(list_rules) :
     for rule in list_rules :
         rule.output()
+
+# =====================================
+# Rules を JSON形式でsaveする関数
+# =====================================
+def saveJsonRules(list_rules, fullpath_filename) :
+    #fullpath_filename = '/Users/ooki/git/research_dr/python/Experiment/output.json'
+    for rule in list_rules :
+        # 初期化         
+        rule_save_object = defaultdict(list)
+        # support        
+        rule_save_object['support'] = list(map(str, rule.getSupport()))
+        # 結論部        
+        if type(rule.getConsequent()) == list : rule_save_object['consequent'] = list(map(str,rule.getConsequent()))
+        else : rule_save_object['consequent'].append(str(rule.getConsequent()))
+        # 条件部        
+        list_values = [{key : rule.getValue(key)} for key in rule.getKey()]
+        rule_save_object['value'] = list_values
+        # save
+        with open(fullpath_filename, 'a') as outfile:
+            json.dump(rule_save_object, outfile)
+            outfile.write('\n')
+        #print(json.dumps(rule_save_object))
+
+# =====================================
+# Rules を Python Object形式(pickle)でsaveする関数
+# =====================================
+def savePickleRules(list_rules, fullpath_filename) :
+    #fullpath_filename = '/Users/ooki/git/research_dr/python/Experiment/output.pkl'
+    with open(fullpath_filename, 'wb') as outfile:
+        pickle.dump(list_rules, outfile,  pickle.HIGHEST_PROTOCOL)
+
+# =====================================
+# Rules を Python Object形式(pickle)からロードする関数
+# =====================================
+def loadPickleRules(fullpath_filename) :
+    with open(fullpath_filename, mode='rb') as inputfile:
+        rules = pickle.load(inputfile)
+    return(rules)
 
 # =====================================
 # Rules の Supportの平均数

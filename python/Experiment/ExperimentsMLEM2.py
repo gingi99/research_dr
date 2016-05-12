@@ -27,7 +27,11 @@ importlib.reload(clustering)
 def MLEM2_LERS(FILENAME, iter1, iter2) :
           
     # rule induction
-    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -51,12 +55,16 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     return(accuracy)
 
 # ====================================
-# MLEM2 - LERS による正答率実験
+# MLEM2 - RuleClustering by Sim - LERS による正答率実験
 # ====================================
 def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
           
     # rule induction
-    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
 
     # rule clustering
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -67,7 +75,11 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
 
-    rules = clustering.getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=k)
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_sim/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=k)
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -149,7 +161,7 @@ if __name__ == "__main__":
     # 並列実行    
     proc=4
     freeze_support()
-    results = multi_main(proc, FILENAMES, FUN, k = range(2,4))
+    results = multi_main(proc, FILENAMES, FUN, k = range(2,11))
     
     # 平均と分散
     print(getEvalMeanVar(results))

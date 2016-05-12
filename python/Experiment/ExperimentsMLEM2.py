@@ -46,7 +46,7 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('MLEM2-LERS,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
+    logging.info('MLEM2_LERS,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
     
     return(accuracy)
 
@@ -86,7 +86,7 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('MLEM2-RuleClusteringBySim_-LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    logging.info('MLEM2_RuleClusteringBySim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
     
     return(accuracy)
 
@@ -110,7 +110,7 @@ def saveResults(results, FILENAME):
 # ========================================
 # multi に実行する
 # ========================================
-def multi_main(proc,FILENAMES, FUN):
+def multi_main(proc, FILENAMES, FUN, **kargs):
     pool = Pool(proc)
     multiargs = []
 
@@ -120,7 +120,8 @@ def multi_main(proc,FILENAMES, FUN):
             multiargs.append((FILENAME,iter1,iter2))
     # MLEM2_RuleClusteringBySim_LERS 用
     elif FUN == MLEM2_RuleClusteringBySim_LERS :
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), range(2,11)):
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
             multiargs.append((FILENAME,iter1,iter2,k))
     # その他
     else :
@@ -142,13 +143,13 @@ if __name__ == "__main__":
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
     # 実行したい実験関数
-    FUN = MLEM2_LERS
-    #FUN = MLEM2_RuleClusteringBySim_LERS
+    #FUN = MLEM2_LERS
+    FUN = MLEM2_RuleClusteringBySim_LERS
 
     # 並列実行    
     proc=4
     freeze_support()
-    results = multi_main(proc, FILENAMES, FUN)
+    results = multi_main(proc, FILENAMES, FUN, k = range(2,4))
     
     # 平均と分散
     print(getEvalMeanVar(results))

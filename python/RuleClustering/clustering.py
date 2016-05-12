@@ -148,30 +148,25 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
             # 最も類似度が大きいルールを見つける
             max_similarity = np.max(list_similarities)
             max_rules = [target_rules[i] for i,s in enumerate(list_similarities) if s == max_similarity]
-            #print(len(max_rules))
+            #print("First : " + str(len(max_rules)))
             
             # 一意でなければ、条件部を構成する属性数で判断
             if len(max_rules) > 1 :
                 list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in max_rules]
                 max_count = np.max(list_count_same_conditions)
                 max_rules = [max_rules[i] for i,c in enumerate(list_count_same_conditions) if c == max_count]
-                #print(len(max_rules))
+                #print("Second : " + str(len(max_rules)))
 
             # 一意でなければ、supportの小ささで判断           
             if len(max_rules) > 1 :
                 list_supports = [len(r.getSupport()) for r in max_rules]
                 min_support = np.min(list_supports)
                 max_rules = [max_rules[i] for i,s in enumerate(list_supports) if s == min_support]
-                #print(len(max_rules))
+                #print("Third : " + str(len(max_rules)))
             
-            # 一意でなければ、先頭のルールで判断（ = 必ず一意に決まる）
-            if len(max_rules) > 1 :
-                max_rules = max_rules[0]
-                #print(len(max_rules))
-            
-            # merge 
+            # 先頭のルールでmerge 
             merge_rule = mergeRule(merged_rule, max_rules[0])
-            #print("merge_rule")
+            target_rules.remove(max_rules[0])
             
             # 新しいルールを追加
             target_rules.append(merge_rule)
@@ -190,8 +185,8 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
 if __name__ == "__main__":
 
     FILENAME = 'hayes-roth'
-    iter1 = 4
-    iter2 = 5
+    iter1 = 1
+    iter2 = 10
     
     rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
     
@@ -214,5 +209,17 @@ if __name__ == "__main__":
     predictions = LERS.predictByLERS(rules_new, decision_table_test, list_judgeNominal)
     print(accuracy_score(decision_class, predictions))  
 
-
-
+    # 全セットで確かめ
+    #for iter1 in range(1,11):
+    #    for iter2 in range(1,11):
+    #        print('i1:{iter1} i2:{iter2}'.format(iter1=iter1,iter2=iter2))
+    #        rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    #        filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    #        decision_table = mlem2.getDecisionTable(filepath)
+    #        colnames = mlem2.getColNames(decision_table)
+    
+    #        filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    #        list_nominal = mlem2.getNominalList(filepath)
+    #        list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+    
+    #        rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)

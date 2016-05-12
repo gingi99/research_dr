@@ -8,12 +8,18 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../MLEM2')
+#sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
+sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../RuleClustering')
+#sys.path.append('/Users/ooki/git/research_dr/python/RuleClustering')
 import logging
 logging.basicConfig(filename=os.path.dirname(os.path.abspath(__file__))+'/ExperimentsMLEM2.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
 import importlib
 import mlem2
 importlib.reload(mlem2)  
 import LERS
+importlib.reload(LERS) 
+import clustering
+importlib.reload(clustering) 
 
 # ====================================
 # MLEM2 - LERS による正答率実験
@@ -44,6 +50,46 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     
     return(accuracy)
 
+# ====================================
+# MLEM2 - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
+          
+    # rule induction
+    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+
+    # rule clustering
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+    rules = clustering.getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=k)
+
+    # test data setup
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    
+    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
+    logging.info('MLEM2-RuleClusteringBySim_-LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
+    return(accuracy)
+
 # ========================================
 # listの平均と分散を求める
 # ========================================
@@ -64,13 +110,23 @@ def saveResults(results, FILENAME):
 # ========================================
 # multi に実行する
 # ========================================
-def multi_main(proc,FILENAMES):
+def multi_main(proc,FILENAMES, FUN):
     pool = Pool(proc)
     multiargs = []
-    for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
-        multiargs.append((FILENAME,iter1,iter2))
+
+    # MLEM2_LERS 用
+    if FUN == MLEM2_LERS :
+        for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):            
+            multiargs.append((FILENAME,iter1,iter2))
+    # MLEM2_RuleClusteringBySim_LERS 用
+    elif FUN == MLEM2_RuleClusteringBySim_LERS :
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), range(2,11)):
+            multiargs.append((FILENAME,iter1,iter2,k))
+    # その他
+    else :
+        print("I dont' know the function.")        
   
-    results = pool.starmap(MLEM2_LERS, multiargs)
+    results = pool.starmap(FUN, multiargs)
     return(results)
       
 # ========================================
@@ -85,10 +141,14 @@ if __name__ == "__main__":
     #    print('{filename} {i1} {i2}'.format(filename=FILENAME, i1=iter1, i2=iter2))
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
+    # 実行したい実験関数
+    FUN = MLEM2_LERS
+    #FUN = MLEM2_RuleClusteringBySim_LERS
+
     # 並列実行    
     proc=4
     freeze_support()
-    results = multi_main(proc, FILENAMES)
+    results = multi_main(proc, FILENAMES, FUN)
     
     # 平均と分散
     print(getEvalMeanVar(results))

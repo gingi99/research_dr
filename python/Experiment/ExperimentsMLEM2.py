@@ -50,7 +50,7 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('MLEM2_LERS,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
+    logging.info('MLEM2_LERS,1,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
     
     return(accuracy)
 
@@ -223,6 +223,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
             multiargs.append((FILENAME,iter1,iter2,k))
+
     # その他
     else :
         print("I dont' know the function.")        

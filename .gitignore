@@ -1,6 +1,8 @@
+.spyderworkspace
 __pycache__/
 *.pyc
 *.json
 *.pkl
 *.log
 .spyderworkspace
+.Rproj.user

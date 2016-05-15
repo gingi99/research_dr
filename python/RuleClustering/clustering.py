@@ -78,6 +78,24 @@ def getSimilarity(rule1, rule2, colnames, list_judgeNominal) :
     return(similarity)
 
 # =====================================
+# ななめが発生するかを返す
+# =====================================
+def isNaname(rule1, rule2, merge_rule) :
+    # 未実装
+    return(True)
+
+# =====================================
+# 決定ルールの識別行列の要素を返す
+# =====================================
+def getElementDiscernibieRule(rule1, rule2):
+    merge_rule = mergeRule(rule1,rule2)
+    # 各条件属性から1つずつ選んたmergeルール集合を作る
+    merge_rules = []
+    # 斜めが発生している個数を数えて返す
+    list_judge = [isNaname(rule1, rule2, merge_rule for m_rule in merge_rules)]
+    return(sum(list_judge))
+
+# =====================================
 # Random にルールを選ぶ関数
 # =====================================
 def choiceRandomRule(list_rules) :
@@ -146,6 +164,9 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
             merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
             merged_rule = merged_rules[0]
             target_rules.remove(merged_rule)
+
+            # 斜めが発生しないルールを探す
+            ## 実装中
 
             # merged_rule との類似度を求める
             list_similarities = [getSimilarity(merged_rule, r, colnames, list_judgeNominal) for r in target_rules] 

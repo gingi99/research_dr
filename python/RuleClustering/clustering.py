@@ -4,6 +4,7 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import sys
 import os
+import random
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../MLEM2')
 import importlib
 import mlem2
@@ -75,6 +76,12 @@ def getSimilarity(rule1, rule2, colnames, list_judgeNominal) :
             similarity += 0
     similarity /= len(colnames)
     return(similarity)
+
+# =====================================
+# Random にルールを選ぶ関数
+# =====================================
+def choiceRandomRule(list_rules) :
+    return(random.choice(list_rules))
 
 # =====================================
 # Rule を構成する条件属性名が同じ数
@@ -180,6 +187,93 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
     return(rules_new)
         
 # ========================================
+# 比較：ランダム結合でクラスタリング
+# ========================================
+def getRuleClusteringByRandom(rules, k=3) :
+    
+    rules_new = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        target_rules = [r for r in rules if r.getConsequent() == cls]
+
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(target_rules) 
+        while min_support < k :
+
+            # target_rules が 1つなら
+            if len(target_rules) == 1 :
+                print("shori")
+
+            # merge対象ルールを見つける
+            merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
+            merged_rule = merged_rules[0]
+            target_rules.remove(merged_rule)
+
+            # ランダムにもう一つのルールを求める
+            random_rule = choiceRandomRule(target_rules)
+            
+            # 先頭のルールでmerge 
+            merge_rule = mergeRule(merged_rule, random_rule)
+            target_rules.remove(random_rule)
+            
+            # 新しいルールを追加
+            target_rules.append(merge_rule)
+            
+            # min_support 更新
+            min_support = mlem2.getMinSupport(target_rules)
+            print(min_support)
+            
+        rules_new.extend(target_rules)
+        
+    return(rules_new)
+
+# ========================================
+# 比較：マッチした属性の数だけでクラスタリング
+# ========================================
+def getRuleClusteringBySameCondition(rules, k=3) :
+    
+    rules_new = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        target_rules = [r for r in rules if r.getConsequent() == cls]
+
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(target_rules) 
+        while min_support < k :
+
+            # target_rules が 1つなら
+            if len(target_rules) == 1 :
+                print("shori")
+
+            # merge対象ルールを見つける
+            merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
+            merged_rule = merged_rules[0]
+            target_rules.remove(merged_rule)
+
+            # 同じ条件属性の数でマージするルールを決定
+            list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in target_rules]
+            max_count = np.max(list_count_same_conditions)
+            max_rules = [target_rules[i] for i,c in enumerate(list_count_same_conditions) if c == max_count]
+            
+            # 先頭のルールでmerge 
+            merge_rule = mergeRule(merged_rule, max_rules[0])
+            target_rules.remove(max_rules[0])
+            
+            # 新しいルールを追加
+            target_rules.append(merge_rule)
+            
+            # min_support 更新
+            min_support = mlem2.getMinSupport(target_rules)
+            print(min_support)
+            
+        rules_new.extend(target_rules)
+        
+    return(rules_new)
+
+        
+# ========================================
 # main
 # ========================================
 if __name__ == "__main__":
@@ -198,7 +292,10 @@ if __name__ == "__main__":
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
     
-    rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
+    # ルールクラスタリング
+    #rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
+    #rules_new = getRuleClusteringByRandom(rules, k=3)
+    rules_new = getRuleClusteringBySameCondition(rules, k=3)
 
     # predict by LERS
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'

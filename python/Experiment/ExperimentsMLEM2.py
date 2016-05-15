@@ -102,6 +102,84 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     
     return(accuracy)
 
+# ====================================
+# MLEM2 - RuleClustering by Random - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringByRandom_LERS(FILENAME, iter1, iter2, k) :
+          
+    # rule induction
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
+
+    # rule clustering
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_random/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByRandom(rules, k=k)
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
+
+    # test data setup
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    
+    logging.info('MLEM2_RuleClusteringByRandom_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
+    return(accuracy)
+
+# ====================================
+# MLEM2 - RuleClustering by SameCondition - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringBySameCondition_LERS(FILENAME, iter1, iter2, k) :
+          
+    # rule induction
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
+
+    # rule clustering
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_same_condition/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySameCondition(rules, k=k)
+
+    # rule save
+    mlem2.savePickleRules(rules, fullpath_filename)
+
+    # test data setup
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    
+    logging.info('MLEM2_RuleClusteringBySameCondition_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
+    return(accuracy)
+
 # ========================================
 # listの平均と分散を求める
 # ========================================
@@ -135,6 +213,16 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
             multiargs.append((FILENAME,iter1,iter2,k))
+    # MLEM2_RuleClusteringByRandom_LERS 用
+    elif FUN == MLEM2_RuleClusteringByRandom_LERS :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
+            multiargs.append((FILENAME,iter1,iter2,k))  
+    # MLEM2_RuleClusteringBySameCondition_LERS 用
+    elif FUN == MLEM2_RuleClusteringBySameCondition_LERS :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
+            multiargs.append((FILENAME,iter1,iter2,k))
     # その他
     else :
         print("I dont' know the function.")        
@@ -156,7 +244,9 @@ if __name__ == "__main__":
 
     # 実行したい実験関数
     #FUN = MLEM2_LERS
-    FUN = MLEM2_RuleClusteringBySim_LERS
+    #FUN = MLEM2_RuleClusteringBySim_LERS
+    #FUN = MLEM2_RuleClusteringByRandom_LERS
+    FUN = MLEM2_RuleClusteringBySameCondition_LERS
 
     # 並列実行    
     proc=4

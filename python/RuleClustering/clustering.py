@@ -1,11 +1,13 @@
 # coding: utf-8
 # python 3.5
 from sklearn.metrics import accuracy_score
+from itertools import product
 import numpy as np
 import sys
 import os
 import random
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../MLEM2')
+#sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
 import importlib
 import mlem2
 importlib.reload(mlem2)  
@@ -80,19 +82,46 @@ def getSimilarity(rule1, rule2, colnames, list_judgeNominal) :
 # =====================================
 # ななめが発生するかを返す
 # =====================================
-def isNaname(rule1, rule2, merge_rule) :
-    # 未実装
-    return(True)
+def isNaname(rule1, rule2, c_rule) :
+    # rule 1 チェック
+    judge = []
+    for key in rule1.getKey() :        
+        if c_rule.getValue(key) == None : 
+            pass
+        else : 
+            judge.append(isSuperList(c_rule.getValue(key), rule1.getValue(key)))
+    
+    if all(judge) : return(True)
+    # rule 2 チェック
+    judge = []
+    for key in rule2.getKey() :        
+        if c_rule.getValue(key) == None : 
+            pass
+        else : 
+            judge.append(isSuperList(c_rule.getValue(key), rule2.getValue(key)))
+    
+    if all(judge) : return(True)
+    else : return(False)
 
 # =====================================
 # 決定ルールの識別行列の要素を返す
 # =====================================
 def getElementDiscernibieRule(rule1, rule2):
     merge_rule = mergeRule(rule1,rule2)
-    # 各条件属性から1つずつ選んたmergeルール集合を作る
-    merge_rules = []
+    
+    # 各条件属性から1つずつ選んた斜め判定ルール集合を作る
+    list_pattern = [merge_rule.getValue(key,onecase=False) for key in merge_rule.getKey()]
+    list_setvalues = list(product(*list_pattern))
+    candidate_rules = []    
+    for setvalue in list_setvalues:
+        rule = mlem2.Rule2()
+        for i,v in enumerate(setvalue):
+            rule.setValue(merge_rule.getKey()[i], v)
+            print(i,v)
+        candidate_rules.append(rule)    
+
     # 斜めが発生している個数を数えて返す
-    list_judge = [isNaname(rule1, rule2, merge_rule for m_rule in merge_rules)]
+    list_judge = [isNaname(rule1, rule2, c_rule) for c_rule in candidate_rules]
     return(sum(list_judge))
 
 # =====================================

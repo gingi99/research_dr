@@ -91,7 +91,7 @@ def isNaname(rule1, rule2, c_rule) :
         else : 
             judge.append(isSuperList(c_rule.getValue(key), rule1.getValue(key)))
     
-    if all(judge) : return(True)
+    if all(judge) : return(False)
     # rule 2 チェック
     judge = []
     for key in rule2.getKey() :        
@@ -100,11 +100,11 @@ def isNaname(rule1, rule2, c_rule) :
         else : 
             judge.append(isSuperList(c_rule.getValue(key), rule2.getValue(key)))
     
-    if all(judge) : return(True)
-    else : return(False)
+    if all(judge) : return(False)
+    else : return(True)
 
 # =====================================
-# 決定ルールの識別行列の要素を返す
+# 決定ルールのマージのための矛盾識別行列の要素を返す
 # =====================================
 def getElementDiscernibieRule(rule1, rule2):
     merge_rule = mergeRule(rule1,rule2)
@@ -117,7 +117,7 @@ def getElementDiscernibieRule(rule1, rule2):
         rule = mlem2.Rule2()
         for i,v in enumerate(setvalue):
             rule.setValue(merge_rule.getKey()[i], v)
-            print(i,v)
+            #print(i,v)
         candidate_rules.append(rule)    
 
     # 斜めが発生している個数を数えて返す
@@ -171,9 +171,9 @@ def mergeRule(rule1, rule2):
     return(merge_rule)    
 
 # =====================================
-# Main 関数
+# Main 関数 : ななめが発生しないように + similarity
 # =====================================
-def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
+def getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=3) :
     
     rules_new = list()    
     
@@ -195,7 +195,77 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
             target_rules.remove(merged_rule)
 
             # 斜めが発生しないルールを探す
-            ## 実装中
+            list_inconsistency = [getElementDiscernibieRule(r, merged_rule) for r in target_rules]
+
+            # もっとも斜めが発生しないルールに絞る
+            max_inconsistency = np.max(list_inconsistency)
+            max_rules = [target_rules[i] for i,c in enumerate(list_inconsistency) if c == max_inconsistency]
+            
+            # 一意でなければ、類似度で判断
+            if len(max_rules) > 1 :
+
+                # merged_rule との類似度を求める
+                list_similarities = [getSimilarity(merged_rule, r, colnames, list_judgeNominal) for r in max_rules] 
+                #combi_rule = list(combinations(tuple(target_rules),2))
+                #list_similarities = [getSimilarity(combi[0], combi[1], colnames, list_judgeNominal) for combi in combi_rule]
+            
+                # 最も類似度が大きいルールを見つける
+                max_similarity = np.max(list_similarities)
+                max_rules = [max_rules[i] for i,s in enumerate(list_similarities) if s == max_similarity]
+                #print("First : " + str(len(max_rules)))
+            
+            # 一意でなければ、条件部を構成する属性数で判断
+            if len(max_rules) > 1 :
+                list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in max_rules]
+                max_count = np.max(list_count_same_conditions)
+                max_rules = [max_rules[i] for i,c in enumerate(list_count_same_conditions) if c == max_count]
+                #print("Second : " + str(len(max_rules)))
+
+            # 一意でなければ、supportの小ささで判断           
+            if len(max_rules) > 1 :
+                list_supports = [len(r.getSupport()) for r in max_rules]
+                min_support = np.min(list_supports)
+                max_rules = [max_rules[i] for i,s in enumerate(list_supports) if s == min_support]
+                #print("Third : " + str(len(max_rules)))
+            
+            # 先頭のルールでmerge 
+            merge_rule = mergeRule(merged_rule, max_rules[0])
+            target_rules.remove(max_rules[0])
+            
+            # 新しいルールを追加
+            target_rules.append(merge_rule)
+            
+            # min_support 更新
+            min_support = mlem2.getMinSupport(target_rules)
+            print(min_support)
+            
+        rules_new.extend(target_rules)
+        
+    return(rules_new)
+
+# =====================================
+# Main 関数 : Similarity
+# =====================================
+def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
+    
+    rules_new = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        target_rules = [r for r in rules if r.getConsequent() == cls]
+
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(target_rules) 
+        while min_support < k :
+
+            # target_rules が 1つなら
+            if len(target_rules) == 1 :
+                print("shori")
+
+            # merge対象ルールを見つける
+            merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
+            merged_rule = merged_rules[0]
+            target_rules.remove(merged_rule)
 
             # merged_rule との類似度を求める
             list_similarities = [getSimilarity(merged_rule, r, colnames, list_judgeNominal) for r in target_rules] 
@@ -345,7 +415,8 @@ if __name__ == "__main__":
     # ルールクラスタリング
     #rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
     #rules_new = getRuleClusteringByRandom(rules, k=3)
-    rules_new = getRuleClusteringBySameCondition(rules, k=3)
+    #rules_new = getRuleClusteringBySameCondition(rules, k=3)
+    rules_new = getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=3)
 
     # predict by LERS
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'

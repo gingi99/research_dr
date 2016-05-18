@@ -303,20 +303,20 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySameCondition_LERS
     FUN = MLEM2_RuleClusteringByConsistentSim_LERS
 
-    FUNS = ['MLEM2_LERS',
-            'MLEM2_RuleClusteringBySim_LERS',
-            'MLEM2_RuleClusteringByRandom_LERS',
-            'MLEM2_RuleClusteringBySameCondition_LERS',
-            'MLEM2_RuleClusteringByConsistentSim_LERS']
+    FUNS = [MLEM2_LERS,
+            MLEM2_RuleClusteringBySim_LERS,
+            MLEM2_RuleClusteringByRandom_LERS,
+            MLEM2_RuleClusteringBySameCondition_LERS,
+            MLEM2_RuleClusteringByConsistentSim_LERS]
 
     # 並列実行
     proc=4
     freeze_support()
     
-    #for FUN in FUNS :
-    results = multi_main(proc, FILENAMES, FUN, k = range(2,11))
-    # 平均と分散
-    print(getEvalMeanVar(results))
+    for FUN in FUNS :
+        results = multi_main(proc, FILENAMES, FUN, k = range(2,11))
+        # 平均と分散
+        print(getEvalMeanVar(results))
     
     # 保存する
     #saveResults(results, "/data/uci/hayes-roth/accuracy.txt")

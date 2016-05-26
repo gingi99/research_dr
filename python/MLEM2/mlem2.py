@@ -89,12 +89,12 @@ class Rule2 :
            self.support = intersect(self.support, supports)
    def getKey(self) :
        return(list(self.value.keys()))
-   def getValue(self, idx) :
+   def getValue(self, idx, onecase=True) :
        if not idx in self.getKey(): 
            return(None)
        else: 
            i = iter(self.value[idx])
-           if any(i) and not any(i) : return(self.value[idx][0])
+           if any(i) and not any(i) and onecase : return(self.value[idx][0])
            else : return(self.value[idx])
    def getConsequent(self) :
        i = iter(self.consequent)

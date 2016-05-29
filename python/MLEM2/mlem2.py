@@ -162,7 +162,7 @@ def getMeanSupport(list_rules) :
     return(ans)
 
 # =====================================
-# Rules の Supportの平均数
+# Rules の Supportの最小値
 # =====================================
 def getMinSupport(list_rules) :
     supports = [len(r.getSupport()) for r in list_rules]

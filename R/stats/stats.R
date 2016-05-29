@@ -15,7 +15,7 @@ library(Hmisc)
 # データ読み込み
 # ===========================================
 
-df <- read_csv("../../python/Experiment/ExperimentsMLEM2.log",col_names = F)
+df <- read_csv("../../python/Experiment/hayes-roth.log",col_names = F)
 
 # ===========================================
 # データクレンジング
@@ -31,10 +31,12 @@ df %>%
 # acc の boxplot
 df %>%
   filter(method == "MLEM2_LERS" | 
+         method == "MLEM2_OnlyK_LERS" | 
          method == "MLEM2_RuleClusteringBySim_LERS" | 
          method == "MLEM2_RuleClusteringByRandom_LERS" |
          method == "MLEM2_RuleClusteringBySameCondition_LERS" |
-         method == "MLEM2_RuleClusteringByConsistentSim_LERS") %>%
+         method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   ggplot(aes(x=k, y=acc, color=method)) +

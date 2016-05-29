@@ -187,7 +187,8 @@ def getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, 
 
             # target_rules が 1つなら
             if len(target_rules) == 1 :
-                print("shori")
+                target_rules.pop()
+                break
 
             # merge対象ルールを見つける
             merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
@@ -244,6 +245,82 @@ def getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, 
     return(rules_new)
 
 # =====================================
+# Main 関数 : m以上のルールを使わず + ななめが発生しないように + similarity
+# =====================================
+def getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3) :
+    
+    rules_new = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        cls_rules = [r for r in rules if r.getConsequent() == cls]
+
+        # m未満のルールとm以上のルールに分ける
+        target_rules = [r for r in cls_rules if len(r.getSupport()) < m]
+        no_target_rules = [r for r in cls_rules if r not in target_rules]
+        
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(target_rules) if target_rules else 0
+        while min_support < k and target_rules:
+
+            # target_rules が 1つならそれを削除して繰り返しを抜ける
+            if len(target_rules) == 1 :
+                target_rules.pop()
+                break
+                
+            # merge対象ルールを見つける
+            merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
+            merged_rule = merged_rules[0]
+            target_rules.remove(merged_rule)
+
+            # 斜めが発生しないルールを探す
+            list_inconsistency = [getElementDiscernibieRule(r, merged_rule) for r in target_rules]
+
+            # もっとも斜めが発生しないルールに絞る
+            max_inconsistency = np.max(list_inconsistency)
+            max_rules = [target_rules[i] for i,c in enumerate(list_inconsistency) if c == max_inconsistency]
+            
+            # 一意でなければ、類似度で判断
+            if len(max_rules) > 1 :
+
+                # merged_rule との類似度を求める
+                list_similarities = [getSimilarity(merged_rule, r, colnames, list_judgeNominal) for r in max_rules] 
+                
+                # 最も類似度が大きいルールを見つける
+                max_similarity = np.max(list_similarities)
+                max_rules = [max_rules[i] for i,s in enumerate(list_similarities) if s == max_similarity]
+                
+            # 一意でなければ、条件部を構成する属性数で判断
+            if len(max_rules) > 1 :
+                list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in max_rules]
+                max_count = np.max(list_count_same_conditions)
+                max_rules = [max_rules[i] for i,c in enumerate(list_count_same_conditions) if c == max_count]
+                #print("Second : " + str(len(max_rules)))
+
+            # 一意でなければ、supportの小ささで判断           
+            if len(max_rules) > 1 :
+                list_supports = [len(r.getSupport()) for r in max_rules]
+                min_support = np.min(list_supports)
+                max_rules = [max_rules[i] for i,s in enumerate(list_supports) if s == min_support]
+                #print("Third : " + str(len(max_rules)))
+            
+            # 先頭のルールでmerge 
+            merge_rule = mergeRule(merged_rule, max_rules[0])
+            target_rules.remove(max_rules[0])
+            
+            # 新しいルールを追加
+            target_rules.append(merge_rule)
+            
+            # min_support 更新
+            min_support = mlem2.getMinSupport(target_rules)
+            print(min_support)
+        
+        rules_new.extend(target_rules)
+        rules_new.extend(no_target_rules)
+        
+    return(rules_new)
+
+# =====================================
 # Main 関数 : Similarity
 # =====================================
 def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
@@ -260,7 +337,8 @@ def getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3) :
 
             # target_rules が 1つなら
             if len(target_rules) == 1 :
-                print("shori")
+                target_rules.pop()
+                break
 
             # merge対象ルールを見つける
             merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
@@ -323,7 +401,8 @@ def getRuleClusteringByRandom(rules, k=3) :
 
             # target_rules が 1つなら
             if len(target_rules) == 1 :
-                print("shori")
+                target_rules.pop()
+                break
 
             # merge対象ルールを見つける
             merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
@@ -365,7 +444,8 @@ def getRuleClusteringBySameCondition(rules, k=3) :
 
             # target_rules が 1つなら
             if len(target_rules) == 1 :
-                print("shori")
+                target_rules.pop()
+                break
 
             # merge対象ルールを見つける
             merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
@@ -416,7 +496,9 @@ if __name__ == "__main__":
     #rules_new = getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=3)
     #rules_new = getRuleClusteringByRandom(rules, k=3)
     #rules_new = getRuleClusteringBySameCondition(rules, k=3)
-    rules_new = getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=3)
+    #rules_new = getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=3)
+    rules_new = getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3)
+
 
     # predict by LERS
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'

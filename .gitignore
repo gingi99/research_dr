@@ -1,9 +1,12 @@
 .idea
 .spyderworkspace
 __pycache__/
+*.Rproj
 *.pyc
 *.json
 *.pkl
 *.log
 .spyderworkspace
+*.RData
+*.Rhistory
 .Rproj.user

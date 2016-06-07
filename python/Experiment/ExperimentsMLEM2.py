@@ -93,7 +93,7 @@ def MLEM2_OnlyK_LERS(FILENAME, iter1, iter2, k) :
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
     logging.info('MLEM2_OnlyK_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
     
-    print("START iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
+    print("END iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
     return(accuracy)
 
 # ====================================

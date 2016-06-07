@@ -63,16 +63,16 @@ def MLEM2_OnlyK_LERS(FILENAME, iter1, iter2, k) :
     # rule induction
     fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
-
+    
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # only-k rule filter
     fullpath_filename = '/data/uci/'+FILENAME+'/rules_onlyK/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else [r for r in rules if len(r.getSupport()) >= k]
     
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'

@@ -149,8 +149,10 @@ def savePickleRules(list_rules, fullpath_filename) :
 # Rules を Python Object形式(pickle)からロードする関数
 # =====================================
 def loadPickleRules(fullpath_filename) :
+    print("START loadPickle : " + str(fullpath_filename))    
     with open(fullpath_filename, mode='rb') as inputfile:
         rules = pickle.load(inputfile)
+    print("END loadPickle : " + str(fullpath_filename))    
     return(rules)
 
 # =====================================

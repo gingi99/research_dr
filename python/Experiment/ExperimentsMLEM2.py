@@ -59,6 +59,7 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
 # ====================================
 def MLEM2_OnlyK_LERS(FILENAME, iter1, iter2, k) :
           
+    print("START iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
     # rule induction
     fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
@@ -356,6 +357,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     
     # MLEM2_OnlyK_LERS 用
     elif FUN == MLEM2_OnlyK_LERS :
+        print("MLEM2_OnlyK_LERS")
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):

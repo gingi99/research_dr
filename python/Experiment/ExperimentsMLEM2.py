@@ -12,7 +12,6 @@ sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
 sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../RuleClustering')
 #sys.path.append('/Users/ooki/git/research_dr/python/RuleClustering')
 import logging
-logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/ExperimentsMLEM2.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
 import importlib
 import mlem2
 importlib.reload(mlem2)  
@@ -346,6 +345,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     if FUN == MLEM2_LERS :
         for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):            
             multiargs.append((FILENAME,iter1,iter2))
+        logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
         results = pool.starmap(FUN, multiargs)
         
     # MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS 用
@@ -354,6 +354,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k, k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_LERS 用
@@ -362,6 +363,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringByConsistentSim_LERS 用
@@ -370,6 +372,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringBySim_LERS 用
@@ -378,6 +381,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringByRandom_LERS 用
@@ -386,6 +390,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringBySameCondition_LERS 用
@@ -394,6 +399,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
                 multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
             results.extend(pool.starmap(FUN, multiargs))
             
     # その他
@@ -409,7 +415,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['nursery']    
+    FILENAMES = ['nursery']
     k_range = range(3,30,3)
     
     # シングルプロセスで実行

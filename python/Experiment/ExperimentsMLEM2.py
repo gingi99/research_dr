@@ -31,7 +31,7 @@ def MLEM2_LERS(FILENAME, iter1, iter2) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -93,6 +93,7 @@ def MLEM2_OnlyK_LERS(FILENAME, iter1, iter2, k) :
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
     logging.info('MLEM2_OnlyK_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
     
+    print("START iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
     return(accuracy)
 
 # ====================================
@@ -104,7 +105,7 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS(FILENAME, iter1, iter2, 
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -119,7 +120,7 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS(FILENAME, iter1, iter2, 
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -152,7 +153,7 @@ def MLEM2_RuleClusteringByConsistentSim_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -167,7 +168,7 @@ def MLEM2_RuleClusteringByConsistentSim_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=k)
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -200,7 +201,7 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -215,7 +216,7 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySimilarity(rules, colnames, list_judgeNominal, k=k)
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -248,14 +249,14 @@ def MLEM2_RuleClusteringByRandom_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
     fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_random/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByRandom(rules, k=k)
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -287,14 +288,14 @@ def MLEM2_RuleClusteringBySameCondition_LERS(FILENAME, iter1, iter2, k) :
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
     fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_same_condition/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySameCondition(rules, k=k)
 
     # rule save
-    mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # test data setup
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
@@ -357,7 +358,6 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     
     # MLEM2_OnlyK_LERS 用
     elif FUN == MLEM2_OnlyK_LERS :
-        print("MLEM2_OnlyK_LERS")
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         for k in k_range:
             for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):

@@ -54,10 +54,42 @@ def Apriori_LERS(FILENAME, iter1, iter2, minsup, minconf) :
     accuracy = accuracy_score(list(map(str,decision_class)), predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('Apriori_LERS,1,{FILENAME},{iter1},{iter2},{acc},{minsup},{minconf}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,minsup=minsup,minconf=minconf))
+    logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+    logging.info('Apriori_LERS,{FILENAME},{iter1},{iter2},{acc},{minsup},{minconf}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,minsup=minsup,minconf=minconf))
     
     return(accuracy)
-      
+  
+# ========================================
+# multi に実行する
+# ========================================
+def multi_main(proc, FILENAMES, FUN, **kargs):
+    pool = Pool(proc)
+    results = []
+    multiargs = []
+
+    # Apriori_LERS 用
+    if FUN == Apriori_LERS :
+        minconf = 1
+        minsup_range = kargs['minsup'] if 'minsup' in kargs else range(5,10,5)
+        for minsup in minsup_range:
+            for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):            
+                multiargs.append((FILENAME,iter1,iter2,minsup,minconf))
+            results = pool.starmap(FUN, multiargs)
+    # その他
+    else :
+        print("I dont' know the function.")        
+  
+    #results = pool.starmap(FUN, multiargs)
+    return(results)
+  
+# ========================================
+# listの平均と分散を求める
+# ========================================
+def getEvalMeanVar(result):
+    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(results),3)), std=('%.3f' % round(np.std(results),3)))
+    return(ans)
+
+  
 # ========================================
 # main
 # ========================================
@@ -66,7 +98,7 @@ if __name__ == "__main__":
     # set data and k
     FILENAMES = ['hayes-roth']
     minconf = 1
-    minsup_range = range(5,10,5)
+    minsup_range = range(10,15,5)
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -76,22 +108,12 @@ if __name__ == "__main__":
     # 実行したい実験関数
     FUN = Apriori_LERS
 
-    #FUNS = [MLEM2_LERS,
-    #        MLEM2_OnlyK_LERS,
-    #        MLEM2_RuleClusteringBySim_LERS,
-    #        MLEM2_RuleClusteringByRandom_LERS,
-    #        MLEM2_RuleClusteringBySameCondition_LERS,
-    #        MLEM2_RuleClusteringByConsistentSim_LERS,
-    #        MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS]
-
     # 並列実行
-    proc=48
+    proc=4
     freeze_support()
     
     #for FUN in FUNS :
-    results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    results = multi_main(proc, FILENAMES, FUN, minsup = minsup_range)
     # 平均と分散
     print(getEvalMeanVar(results))
     
-    # 保存する
-    #saveResults(results, "/data/uci/hayes-roth/accuracy.txt")

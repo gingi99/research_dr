@@ -415,8 +415,8 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['nursery']
-    k_range = range(3,30,3)
+    FILENAMES = ['hayes-roth']
+    k_range = range(2,3,1)
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    

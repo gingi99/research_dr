@@ -72,7 +72,6 @@ df %>%
     theme(axis.text.y = element_text(size=12)) +
     theme(legend.position = "bottom")
   
-
 # ===========================================
 # latex 形式の表
 # ===========================================

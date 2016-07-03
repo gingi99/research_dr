@@ -215,11 +215,15 @@ def getPerIdentifiedClass(rules, p) :
         list_combi_product = list(product(*list_combi))
         bunbo += len(list_combi_product)
         for lc in list_combi_product:
-            rules_target = list()        
+            rules_target = list()
+            # combi をもつルールを探す            
             for r in rules :
                 match_count = 0
+                # combi の条件属性を持つかチェック。なければスキップ
+                if not isSuperList(list(combi), r.getKey()) :
+                    continue
                 for (i, c) in enumerate(combi):
-                    if r.getValue(c) == lc[i] :
+                    if lc[i] in r.getValue(c, onecase = False) :
                         match_count += 1
                 else :
                     if match_count == len(combi):

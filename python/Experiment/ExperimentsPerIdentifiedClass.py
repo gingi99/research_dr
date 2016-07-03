@@ -272,6 +272,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
+    #FILENAMES = ['hayes-roth']
     FILENAMES = ['nursery']
     #k_range = range(2,11,1)
     k_range = range(3,30,3)

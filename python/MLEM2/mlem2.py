@@ -231,7 +231,10 @@ def getPerIdentifiedClass(rules, p) :
                 # rules_target が推定するクラスが１つのみなら、1増やす
                 if len(getEstimatedClass(rules_target)) == 1 :
                     count += 1
-    ans = (count / bunbo)
+    if bunbo == 0 :
+        ans = 0
+    else:
+        ans = (count / bunbo)
     return(ans)
 
 # =====================================

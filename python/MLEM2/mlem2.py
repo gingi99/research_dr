@@ -193,18 +193,19 @@ def getEstimatedClass(list_rules) :
     return(consequents)
     
 # =====================================
-# Rules のうち、P個の属性値が分かれば、クラスを推定できるか：たぶんできたけどテストしていない
+# Rules のうち、P個の属性値が分かれば、クラスを推定できるか
 # =====================================
-def getPerIdentifiedClass(list_rules, p) :         
+def getPerIdentifiedClass(rules, p) :         
     #list_conditions = [(k,v) for k,values in ruleAttributeValuePairs.items() for v in values]
     
     ruleAttributeValuePairs = defaultdict(set)            
-    for r in list_rules :
-        for k,v in r.value.items() :
-            print(k,v)
-            ruleAttributeValuePairs[k].add(v)
+    for r in rules :
+        for key,value in r.value.items() :
+            #print(key,value)
+            for v in value :
+                ruleAttributeValuePairs[key].add(v)
 
-    rule_attributes = [r.getKey() for r in list_rules]
+    rule_attributes = [r.getKey() for r in rules]
     attributes = tuple(set(chain.from_iterable(rule_attributes)))
     combi_attributes = list(combinations(attributes,p))
     count = 0
@@ -215,12 +216,21 @@ def getPerIdentifiedClass(list_rules, p) :
         bunbo += len(list_combi_product)
         for lc in list_combi_product:
             rules_target = list()        
-            for (i, c) in enumerate(combi):
-                for r in list_rules :
+            for r in rules :
+                match_count = 0
+                for (i, c) in enumerate(combi):
                     if r.getValue(c) == lc[i] :
+                        match_count += 1
+                else :
+                    if match_count == len(combi):
                         rules_target.append(r) 
-            if len(getEstimatedClass(rules_target)) == 1 :
-                count += 1
+            # rules_target が空なら評価から外す
+            if len(rules_target) == 0:
+                bunbo -= 1
+            else:
+                # rules_target が推定するクラスが１つのみなら、1増やす
+                if len(getEstimatedClass(rules_target)) == 1 :
+                    count += 1
     ans = (count / bunbo)
     return(ans)
 

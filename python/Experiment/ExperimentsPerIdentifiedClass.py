@@ -21,85 +21,55 @@ import clustering
 importlib.reload(clustering) 
 
 # ====================================
-# MLEM2 - LERS による正答率実験
+# MLEM2 による特定化実験
 # ====================================
-def MLEM2_LERS(FILENAME, iter1, iter2) :
-
+def MLEM2_Identified(FILENAME, iter1, iter2, p) :
+          
     # rule induction
     fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
-    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
-    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
-    # test data setup
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table_test = mlem2.getDecisionTable(filepath)
-    decision_table_test = decision_table_test.dropna()
-    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
-
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = mlem2.getNominalList(filepath)
-    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
-
-    # predict by LERS
-    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
-
-    # 正答率を求める
-    accuracy = accuracy_score(decision_class, predictions)
-
-    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))
-    #logging.info('MLEM2_LERS,1,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_LERS.csv'
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_LERS,1,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
-
-    return(accuracy)
+        f.writelines('Identify_MLEM2,1,{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
 
 # ====================================
-# MLEM2 - k以上のルールだけにする - LERS による正答率実験
+# MLEM2 - k以上のルールだけにする - LERS による特定化実験
 # ====================================
-def MLEM2_OnlyK_LERS(FILENAME, iter1, iter2, k) :
-
-    print("START iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
+def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
+          
     # rule induction
     fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
-    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
-
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+    
     # rule save
-    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # only-k rule filter
     fullpath_filename = '/data/uci/'+FILENAME+'/rules_onlyK/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else [r for r in rules if len(r.getSupport()) >= k]
-
+    
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
 
-    # test data setup
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table_test = mlem2.getDecisionTable(filepath)
-    decision_table_test = decision_table_test.dropna()
-    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
-
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = mlem2.getNominalList(filepath)
-    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
-
-    # predict by LERS
-    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
-
-    # 正答率を求める
-    accuracy = accuracy_score(decision_class, predictions)
-
-    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))
-    #logging.info('MLEM2_OnlyK_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_OnlyK_LERS.csv'
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_OnlyK.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_OnlyK_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
-
-    #print("END iter1 iter2 k : " + str(iter1) + "," + str(iter2) + "," + str(k))
-    return(accuracy)
+        f.writelines('Identify_MLEM2_OnlyK,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
 
 # ====================================
 # MLEM2 - RuleClustering by SameCondition+Except M Support - LERS による正答率実験
@@ -144,10 +114,7 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS(FILENAME, iter1, iter2, 
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    #logging.info('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS.csv'
-    with open(savepath, "a") as f :
-        f.writelines('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
+    logging.info('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
     
     return(accuracy)
 
@@ -195,11 +162,8 @@ def MLEM2_RuleClusteringByConsistentSim_LERS(FILENAME, iter1, iter2, k) :
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    #logging.info('MLEM2_RuleClusteringByConsistentSim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_RuleClusteringByConsistentSim_LERS.csv'
-    with open(savepath, "a") as f :
-        f.writelines('MLEM2_RuleClusteringByConsistentSim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
-      
+    logging.info('MLEM2_RuleClusteringByConsistentSim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
     return(accuracy)
 
 # ====================================
@@ -246,11 +210,8 @@ def MLEM2_RuleClusteringBySim_LERS(FILENAME, iter1, iter2, k) :
     accuracy = accuracy_score(decision_class, predictions)
     
     #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    #logging.info('MLEM2_RuleClusteringBySim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_RuleClusteringBySim_LERS.csv'
-    with open(savepath, "a") as f :
-        f.writelines('MLEM2_RuleClusteringBySim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
-
+    logging.info('MLEM2_RuleClusteringBySim_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
     return(accuracy)
 
 # ====================================
@@ -288,11 +249,8 @@ def MLEM2_RuleClusteringByRandom_LERS(FILENAME, iter1, iter2, k) :
     # 正答率を求める
     accuracy = accuracy_score(decision_class, predictions)
     
-    #logging.info('MLEM2_RuleClusteringByRandom_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_RuleClusteringByRandom_LERS.csv'
-    with open(savepath, "a") as f :
-        f.writelines('MLEM2_RuleClusteringByRandom_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
-
+    logging.info('MLEM2_RuleClusteringByRandom_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    
     return(accuracy)
 
 # ====================================
@@ -330,10 +288,7 @@ def MLEM2_RuleClusteringBySameCondition_LERS(FILENAME, iter1, iter2, k) :
     # 正答率を求める
     accuracy = accuracy_score(decision_class, predictions)
     
-    #logging.info('MLEM2_RuleClusteringBySameCondition_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    savepath = '/data/uci/'+FILENAME+'/MLEM2_RuleClusteringBySameCondition_LERS.csv'
-    with open(savepath, "a") as f :
-        f.writelines('MLEM2_RuleClusteringBySameCondition_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
+    logging.info('MLEM2_RuleClusteringBySameCondition_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
     
     return(accuracy)
 
@@ -344,16 +299,7 @@ def getEvalMeanVar(result):
     ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(results),3)), std=('%.3f' % round(np.std(results),3)))
     return(ans)
 
-# ========================================
-# results を saveする
-# ========================================
-def saveResults(results, FILENAME):
-    filename = FILENAME
-    outfile = open(filename, 'w')  
-    for x in results:
-        outfile.write(str(x) + "\n")
-    outfile.close()
-    
+#
 # ========================================
 # multi に実行する
 # ========================================
@@ -361,60 +307,65 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     pool = Pool(proc)
     results = []
     multiargs = []
+    p_range = range(1,4)
 
     # MLEM2_LERS 用
-    if FUN == MLEM2_LERS :
-        for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):            
-            multiargs.append((FILENAME,iter1,iter2))
+    if FUN == MLEM2_Identified :
+        for FILENAME, iter1, iter2, p in product(FILENAMES, range(1,11), range(1,11), p_range):            
+            multiargs.append((FILENAME,iter1,iter2,p))
         results = pool.starmap(FUN, multiargs)
         
     # MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS 用
     elif FUN == MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
+        for k in k_range:
+            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
+                multiargs.append((FILENAME,iter1,iter2,k, k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+            results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_LERS 用
-    elif FUN == MLEM2_OnlyK_LERS :
+    elif FUN == MLEM2_OnlyK_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
-            
+        for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):            
+            multiargs.append((FILENAME,iter1,iter2,k,p))
+        results = pool.starmap(FUN, multiargs)
+        
     # MLEM2_RuleClusteringByConsistentSim_LERS 用
     elif FUN == MLEM2_RuleClusteringByConsistentSim_LERS :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
+        for k in k_range:
+            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
+                multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+            results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringBySim_LERS 用
     elif FUN == MLEM2_RuleClusteringBySim_LERS :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
+        for k in k_range:
+            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
+                multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+            results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringByRandom_LERS 用
     elif FUN == MLEM2_RuleClusteringByRandom_LERS :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
+        for k in k_range:
+            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
+                multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+            results.extend(pool.starmap(FUN, multiargs))
             
     # MLEM2_RuleClusteringBySameCondition_LERS 用
     elif FUN == MLEM2_RuleClusteringBySameCondition_LERS :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
-        results.extend(pool.starmap(FUN, multiargs))
+        for k in k_range:
+            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
+                multiargs.append((FILENAME,iter1,iter2,k))
+            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
+            results.extend(pool.starmap(FUN, multiargs))
             
     # その他
     else :
@@ -429,8 +380,8 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['nursery']
-    k_range = range(3,30,3)
+    FILENAMES = ['hayes-roth']
+    k_range = range(2,11,1)
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -438,10 +389,10 @@ if __name__ == "__main__":
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
     # 実行したい実験関数
-    #FUN = MLEM2_LERS
-    #FUN = MLEM2_OnlyK_LERS
+    FUN = MLEM2_Identified
+    FUN = MLEM2_OnlyK_Identified
     #FUN = MLEM2_RuleClusteringBySim_LERS
-    FUN = MLEM2_RuleClusteringByRandom_LERS
+    #FUN = MLEM2_RuleClusteringByRandom_LERS
     #FUN = MLEM2_RuleClusteringBySameCondition_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSim_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
@@ -455,7 +406,7 @@ if __name__ == "__main__":
     #        MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS]
 
     # 並列実行
-    proc=48
+    proc=2
     freeze_support()
     
     #for FUN in FUNS :

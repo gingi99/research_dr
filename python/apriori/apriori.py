@@ -156,7 +156,7 @@ def getRulesByApriori(FILENAME, iter1, iter2, minsup, minconf) :
    
     # 2 ~ frequent itemset
     for c in range(2,decision_table.shape[1]+1) :
-        print(c)
+        #print(c)
         # 頻出アイテム集合から c組み合わせしたものを候補アイテム集合とする
         #candidate_itemset = list(combinations(frequent_itemset, c)) 
         list_candidate_item = []        
@@ -164,7 +164,7 @@ def getRulesByApriori(FILENAME, iter1, iter2, minsup, minconf) :
             for fi2 in range(fi1+1, len(dict_frequent_itemset[c-1])):
                 candidate_item = dict_frequent_itemset[c-1][fi1].union(dict_frequent_itemset[c-1][fi2])
                 list_candidate_item.append(candidate_item)
-                print(fi1,fi2)
+                #print(fi1,fi2)
         list_candidate_item = [item for item in list_candidate_item if len(item) == c]        
         
         # 候補アイテム集合から、１つ前の頻出アイテム集合にあったもので構成されているかをチェックする -> 不要       
@@ -175,7 +175,9 @@ def getRulesByApriori(FILENAME, iter1, iter2, minsup, minconf) :
         
         # 頻出アイテム集合に追加する        
         dict_frequent_itemset[c] = tmp_frequent_itemset
-        
+    
+    print('{iter1},{iter2},frequent item done'.format(iter1=iter1, iter2=iter2))
+    
     # classのアイテムがある頻出パターンだけ取り出す
     list_target = []
     for c in range(2,decision_table.shape[1]+1) :

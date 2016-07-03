@@ -15,7 +15,7 @@ library(Hmisc)
 # データ読み込み
 # ===========================================
 
-df <- read_csv("../python/Experiment/hayes-roth2.log",col_names = F)
+df <- read_csv("/Users/ooki/git/research_dr/python/Experiment/hayes-roth-mlem2.log",col_names = F)
 
 # ===========================================
 # データクレンジング
@@ -32,7 +32,7 @@ df %>%
 df %>%
   filter(method == "MLEM2_LERS" | 
          method == "MLEM2_OnlyK_LERS" | 
-         method == "MLEM2_RuleClusteringBySim_LERS" | 
+         #method == "MLEM2_RuleClusteringBySim_LERS" | 
          method == "MLEM2_RuleClusteringByRandom_LERS" |
          method == "MLEM2_RuleClusteringBySameCondition_LERS" |
          method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
@@ -48,7 +48,7 @@ df %>%
 df %>%
   filter(method == "MLEM2_LERS" | 
            method == "MLEM2_OnlyK_LERS" | 
-           method == "MLEM2_RuleClusteringBySim_LERS" | 
+           #method == "MLEM2_RuleClusteringBySim_LERS" | 
            method == "MLEM2_RuleClusteringByRandom_LERS" |
            method == "MLEM2_RuleClusteringBySameCondition_LERS" |
            method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
@@ -77,28 +77,34 @@ df %>%
 # latex 形式の表
 # ===========================================
 df %>%
-  filter(method == "MLEM2_RuleClusteringBySim_LERS" | 
+  filter(method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
          method == "MLEM2_RuleClusteringByRandom_LERS" |
-         method == "MLEM2_RuleClusteringBySameCondition_LERS") %>%
+         method == "MLEM2_RuleClusteringBySameCondition_LERS" |
+         method == "MLEM2_OnlyK_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
-  mutate(k = paste0("k=",as.character(k))) %>%
+  #mutate(k = paste0("k=",as.character(k))) %>%
   mutate(method = factor(.$method, 
-                        levels = c("MLEM2_RuleClusteringBySim_LERS",
+                        levels = c("MLEM2_RuleClusteringByConsistentSim_LERS",
+                                   "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS",
                                    "MLEM2_RuleClusteringByRandom_LERS",
-                                   "MLEM2_RuleClusteringBySameCondition_LERS"),
-                        labels = c("Similarity",
+                                   "MLEM2_RuleClusteringBySameCondition_LERS",
+                                   "MLEM2_OnlyK_LERS"),
+                        labels = c("提案法1",
+                                   "提案法2",
                                    "Random",
-                                   "Same Condition"))) %>%
+                                   "Same Condition",
+                                   "Only K Rules"))) %>%
   group_by(k, method) %>%
   summarise(mean_acc = format(round(mean(acc,na.rm=T),3),nsmall=3), sd_acc = format(round(sd(acc,na.rm=T),3),nsmall=3)) %>% 
-  unite(col = result, mean_acc, sd_acc, sep="_{¥pm ") %>%
+  unite(col = result, mean_acc, sd_acc, sep="_{\\pm ") %>%
   mutate(result = paste0("$",result,"}$")) %>%
-  spread(key = k, value = result) %>%
-  data.frame(., row.names = .$method) %>%
-  select(-method) %>%
+  spread(key = method, value = result) %>%
+  data.frame(., row.names = .$k) %>%
+  select(-k) %>%
   latex(
     file="",              # LaTeX ファイルの保存先
-    title="Model",        # 1行1列目のセルの内容
-    label="table1",       # LaTeX の \label に相当
-    caption="table1の結果" # LaTeX の \caption に相当
+    title="k",            # 1行1列目のセルの内容
+    label="comparison",       # LaTeX の \label に相当
+    caption="正答率の実験結果" # LaTeX の \caption に相当
   )

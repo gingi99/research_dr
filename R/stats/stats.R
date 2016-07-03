@@ -15,6 +15,15 @@ library(Hmisc)
 # データ読み込み
 # ===========================================
 
+FILENAME <- "nursery"
+DIRPATH <- paste0("/data/uci/",FILENAME)
+files.all <- list.files(DIRPATH)
+files.target <- files.all[str_detect(files.all, "LERS")]
+df <- lapply(files.target, function(f){
+  return(read_csv(paste0(DIRPATH,"/",f), col_names = F))
+}) %>% list.stack()   
+
+# hayes-rothのみ
 df <- read_csv("/Users/ooki/git/research_dr/python/Experiment/hayes-roth-mlem2.log",col_names = F)
 
 # ===========================================
@@ -23,6 +32,8 @@ df <- read_csv("/Users/ooki/git/research_dr/python/Experiment/hayes-roth-mlem2.l
 
 df %>%
   setnames(c("date","code","method","k","filename","iter1","iter2","acc"))
+df %>%
+  setnames(c("method","k","filename","iter1","iter2","acc"))
 
 # ===========================================
 # 可視化
@@ -71,7 +82,16 @@ df %>%
     theme(axis.title.y = element_text(size=15)) +
     theme(axis.text.y = element_text(size=12)) +
     theme(legend.position = "bottom")
-  
+
+# ===========================================
+# MLEM2 のみ
+# ===========================================
+df %>%
+  filter(method == "MLEM2_LERS") %>%
+  group_by(method) %>%
+  summarise(mean_acc = format(round(mean(acc,na.rm=T),3),nsmall=3), 
+            sd_acc = format(round(sd(acc,na.rm=T),3),nsmall=3))
+
 # ===========================================
 # latex 形式の表
 # ===========================================

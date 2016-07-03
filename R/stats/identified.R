@@ -16,7 +16,7 @@ library(Hmisc)
 # データ読み込み
 # ===========================================
 
-FILENAME <- "hayes-roth"
+FILENAME <- "nursery"
 DIRPATH <- paste0("/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.target <- files.all[str_detect(files.all, "Identify")]
@@ -114,7 +114,8 @@ df %>%
   unite(col = result, mean_acc, sd_acc, sep="_{\\pm ") %>%
   mutate(result = paste0("$",result,"}$")) %>%
   spread(key = method, value = result) %>%
-  filter(k == 2 | k == 4 | k == 6 | k == 8) %>%
+  #filter(k == 2 | k == 4 | k == 6 | k == 8) %>%
+  filter(k == 3 | k == 9 | k == 15 | k == 21) %>%
   ungroup() %>%
   arrange(p) %>%
   data.frame(., row.names = paste0("(",.$p,",",.$k,")")) %>%

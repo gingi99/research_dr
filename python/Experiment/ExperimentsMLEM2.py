@@ -373,7 +373,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         #for k in k_range:
         for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
-            multiargs.append((FILENAME,iter1,iter2,k))
+            multiargs.append((FILENAME,iter1,iter2,k,k))
         results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_LERS 用

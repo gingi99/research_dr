@@ -74,7 +74,7 @@ def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
 # ====================================
 # MLEM2 - RuleClustering by SameCondition+Except M Support - LERS による正答率実験
 # ====================================
-def MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS(FILENAME, iter1, iter2, k, m) :
+def MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
     # rule induction
     fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
@@ -94,29 +94,16 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS(FILENAME, iter1, iter2, 
     fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_consistent_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
 
-    # rule save
-    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule.csv'
+    with open(savepath, "a") as f :
+        f.writelines('Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
 
-    # test data setup
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table_test = mlem2.getDecisionTable(filepath)
-    decision_table_test = decision_table_test.dropna()
-    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
-
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = mlem2.getNominalList(filepath)
-    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
-    
-    # predict by LERS
-    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
-    
-    # 正答率を求める
-    accuracy = accuracy_score(decision_class, predictions)
-    
-    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
-    logging.info('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
-    
-    return(accuracy)
 
 # ====================================
 # MLEM2 - RuleClustering by Consistent+Sim - LERS による正答率実験
@@ -316,13 +303,11 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         results = pool.starmap(FUN, multiargs)
         
     # MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS 用
-    elif FUN == MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS :
+    elif FUN == MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
-        for k in k_range:
-            for FILENAME, iter1, iter2, in product(FILENAMES, range(1,11), range(1,11)):
-                multiargs.append((FILENAME,iter1,iter2,k, k))
-            logging.basicConfig(filename=os.path.dirname(os.path.abspath("__file__"))+'/'+FILENAME+'.log',format='%(asctime)s,%(message)s',level=logging.DEBUG)
-            results.extend(pool.starmap(FUN, multiargs))
+        for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k,p))
+        results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_LERS 用
     elif FUN == MLEM2_OnlyK_Identified :
@@ -395,7 +380,7 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringByRandom_LERS
     #FUN = MLEM2_RuleClusteringBySameCondition_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSim_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
+    FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
 
     #FUNS = [MLEM2_LERS,
     #        MLEM2_OnlyK_LERS,

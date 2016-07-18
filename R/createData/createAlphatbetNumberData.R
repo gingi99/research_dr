@@ -10,7 +10,9 @@ library(data.table)
 library(stringr)
 library(tidyr)
 
+FILENAME <- "adult_cleansing2"
 FILENAME <- "hayes-roth"
+FILENAME <- "nursery"
 DIRPATH <- paste0("/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.train <- files.all[str_detect(files.all, "train[0-9]")]
@@ -35,7 +37,8 @@ for(f in files.target){
   }
   
   # 保存
+  f_new <- stringr::str_replace(string = f, pattern = ".tsv", replacement = ".txt")
   write.table(df.alpha, 
-              paste0("/data/uci/",FILENAME,"/alpha/",f), 
+              paste0("/data/uci/",FILENAME,"/alpha/",f_new), 
               sep = " ", row.names=F, quote=F, col.names = F)
 }

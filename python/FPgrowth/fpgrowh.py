@@ -252,17 +252,20 @@ if __name__ == "__main__":
     # データ準備
     #FILEPATH = "/usr/local/share/spark/data/mllib/sample_fpgrowth.txt"
     #"/data/uci/hayes-roth/alpha/hayes-roth-train2-10.txt"
-    FILENAME = "hayes-roth" 
+    #FILENAME = "hayes-roth" 
+    FILENAME = "nursery" 
     iter1 = 6 
     iter2 = 9 
-    classes = ['D1', 'D2', 'D3']
+    #classes = ['D1', 'D2', 'D3']
+    classes = ['D1', 'D2', 'D3', 'D4', 'D5']
     min_sup = 2
-    min_sup_range = range(3,11,1)
+    #min_sup_range = range(3,11,1)
+    min_sup_range = range(3,30,3)
     min_conf = 1.0
     savepath = '/data/uci/'+FILENAME+'/FPGrowth_LERS.csv'
  
     # rule 抽出
-    rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
+    #rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
     #for rule in rules :
     #    print(rule.output())
 
@@ -270,10 +273,8 @@ if __name__ == "__main__":
     #print(predictByLERS(FILENAME, iter1, iter2, rules))
     
     # identify
-    p = 2
-    print(getPerIdentifiedClass(rules, 2))
-
-    quit()
+    #p = 2
+    #print(getPerIdentifiedClass(rules, 2))
 
     # 並列実行して全データで評価
     #proc=4

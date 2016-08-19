@@ -117,7 +117,7 @@ createDataForCrossValidation <- function(filename, n, m){
     Nresidual <- k-nrow(data)%%k
     dummyData <- as.data.frame(matrix(NA,nrow=Nresidual,ncol=ncol(data)))
     names(dummyData) <- names(data)
-    sampleData <- rbind_list(data, dummyData) 
+    sampleData <- bind_rows(data, dummyData) 
     splitData <- split(sampleData, 1:k)
     for(i in 1:k){
       trainData <- data.frame()
@@ -129,7 +129,7 @@ createDataForCrossValidation <- function(filename, n, m){
         }else{
           trainData_tmp <- as.data.frame(splitData[j])
           names(trainData_tmp) <- names(data)
-          trainData <- rbind_list(trainData, trainData_tmp)
+          trainData <- bind_rows(trainData, trainData_tmp)
         }
       }
       filepath <- strsplit(filename, ".tsv")
@@ -153,3 +153,9 @@ age2 <- cut(adult3$age, breaks=c(10,20,30,40,50,60,70,80,90), labels=c("10s","20
 adult3 <- mutate(adult3, age = age2)
 #write.table(adult3, "/data/uci/adult_cleansing2/adult_cleansing2.tsv", sep="\t", quote=FALSE, row.names=FALSE)
 
+## German Credit data cleansing
+credit_categorical <- fread("/mnt/data/uci/german_credit/german_credit.tsv")
+credit_categorical$Duration_of_Credit_month <- cut(credit_categorical$Duration_of_Credit_month, breaks=c(0,6,12,18,24,30,36,42,48,54), right = TRUE, include.lowest = TRUE)
+credit_categorical$Credit_Amount <- cut(credit_categorical$Credit_Amount,breaks=c(0,500,1000,1500,2500,5000,7500,10000,15000,20000), right = TRUE, include.lowest = TRUE)
+credit_categorical$Age_years <- cut(credit_categorical$Age_years, breaks=c(0,25,39,59,64,65,999), right = TRUE, include.lowest = TRUE)
+write.table(credit_categorical, "/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", sep="\t", quote=FALSE, row.names=FALSE)

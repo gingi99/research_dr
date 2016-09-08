@@ -17,6 +17,7 @@ from collections import Counter
 # ---------------------------
 pp = pprint.PrettyPrinter(indent=4)
 pd.set_option('display.max_columns', None)
+DIR_UCI = '/mnt/data/uci'
 
 # --------------------------
 # Rule Class
@@ -490,17 +491,17 @@ def isSuperList(list_a, list_b) :
 def getRulesByMLEM2(FILENAME, iter1, iter2) :
     
     # read data
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = getDecisionTable(filepath)
     decision_table = decision_table.dropna()
     decision_table.index = range(decision_table.shape[0])
 
     # read nominal
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = getNominalList(filepath)
 
     # Lower Approximation
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
     df_la = pd.read_csv(filepath, delimiter='\t')
     list_la = getLowerApproximation(df_la)
 
@@ -628,3 +629,4 @@ if __name__ == "__main__":
     iter2 = 5
     
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)
+

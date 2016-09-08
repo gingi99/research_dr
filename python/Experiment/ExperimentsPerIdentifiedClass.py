@@ -1,7 +1,6 @@
 # coding: utf-8
 # python 3.5
 from itertools import product
-from sklearn.metrics import accuracy_score
 from multiprocessing import Pool
 from multiprocessing import freeze_support
 import numpy as np
@@ -11,7 +10,6 @@ sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
 #sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
 sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../RuleClustering')
 #sys.path.append('/Users/ooki/git/research_dr/python/RuleClustering')
-import logging
 import importlib
 import mlem2
 importlib.reload(mlem2)  
@@ -72,7 +70,7 @@ def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
     return(ans)
 
 # ====================================
-# MLEM2 - RuleClustering by SameCondition+Except M Support - LERS による正答率実験
+# MLEM2 - RuleClustering by ConsistentSim+Except M Support - LERS による正答率実験
 # ====================================
 def MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
     # rule induction
@@ -104,6 +102,38 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified(FILENAME, iter1, i
     
     return(ans)
 
+# ====================================
+# MLEM2 - RuleClustering by Consistent ×　Sim Except M Support - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
+    # rule induction
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # rule clustering
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_consistent_times_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentTimesSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
+
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule.csv'
+    with open(savepath, "a") as f :
+        f.writelines('Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
 
 # ====================================
 # MLEM2 - RuleClustering by Consistent+Sim - LERS による正答率実験
@@ -231,6 +261,13 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
             multiargs.append((FILENAME,iter1,iter2,k,k,p))
         results.extend(pool.starmap(FUN, multiargs))
     
+    # MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified 用
+    elif FUN == MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k,p))
+        results.extend(pool.starmap(FUN, multiargs))
+        
     # MLEM2_OnlyK_Identified 用
     elif FUN == MLEM2_OnlyK_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
@@ -272,10 +309,10 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    #FILENAMES = ['hayes-roth']
-    FILENAMES = ['nursery']
-    #k_range = range(2,11,1)
-    k_range = range(3,30,3)
+    FILENAMES = ['hayes-roth']
+    #FILENAMES = ['nursery']
+    k_range = range(2,11,1)
+    #k_range = range(3,30,3)
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -289,20 +326,20 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySameCondition_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSim_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified
+    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
 
-    FUNS = [MLEM2_Identified,
-            MLEM2_OnlyK_Identified,
-            MLEM2_RuleClusteringByRandom_Identified,
-            MLEM2_RuleClusteringBySameCondition_Identified,
-            MLEM2_RuleClusteringByConsistentSim_Identified,
-            MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified]
+    #FUNS = [MLEM2_Identified,
+    #        MLEM2_OnlyK_Identified,
+    #        MLEM2_RuleClusteringByRandom_Identified,
+    #        MLEM2_RuleClusteringBySameCondition_Identified,
+    #        MLEM2_RuleClusteringByConsistentSim_Identified,
+    #        MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified]
 
     # 並列実行
-    proc=48
+    proc=4
     freeze_support()
     
-    for FUN in FUNS :
-        results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    #for FUN in FUNS :
+    results = multi_main(proc, FILENAMES, FUN, k = k_range)
     # 平均と分散
-    print(getEvalMeanVar(results))
-    
+    print(getEvalMeanVar(results))  

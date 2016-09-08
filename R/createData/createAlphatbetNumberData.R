@@ -10,15 +10,22 @@ library(data.table)
 library(stringr)
 library(tidyr)
 
+# ===========================================
+# 読み取り用のデータ準備
+# ===========================================
 FILENAME <- "adult_cleansing2"
 FILENAME <- "hayes-roth"
 FILENAME <- "nursery"
-DIRPATH <- paste0("/data/uci/",FILENAME)
+FILENAME <- "german_credit_categorical"
+DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.train <- files.all[str_detect(files.all, "train[0-9]")]
 files.test <- files.all[str_detect(files.all, "test")]
 files.target <- c(files.train, files.test)
 
+# ===========================================
+# データ作成
+# ===========================================
 # 各ファイルごとにdfとしてロードして処理
 for(f in files.target){
   # 読み込み
@@ -39,6 +46,6 @@ for(f in files.target){
   # 保存
   f_new <- stringr::str_replace(string = f, pattern = ".tsv", replacement = ".txt")
   write.table(df.alpha, 
-              paste0("/data/uci/",FILENAME,"/alpha/",f_new), 
+              paste0("/mnt/data/uci/",FILENAME,"/alpha/",f_new), 
               sep = " ", row.names=F, quote=F, col.names = F)
 }

@@ -16,7 +16,9 @@ library(Hmisc)
 # データ読み込み
 # ===========================================
 
+FILENAME <- "adult_cleansing2"
 FILENAME <- "nursery"
+FILENAME <- "hayes-roth"
 DIRPATH <- paste0("/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.target <- files.all[str_detect(files.all, "Identify")]
@@ -37,12 +39,13 @@ df %>%
 
 # identify の boxplot
 df %>%
-  filter(method == "Identify_MLEM2" | 
-         method == "Identify_MLEM2_OnlyK" | 
-         method == "Identify_MLEM2_Random" |
+  filter(#method == "Identify_MLEM2" | 
+         #method == "Identify_MLEM2_OnlyK" | 
+         #method == "Identify_MLEM2_Random" |
          method == "Identify_MLEM2_SameCondition" |
-         method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
-         method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule") %>%
+         #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
+         method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
+         method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   ggplot(aes(x=k, y=identify, color=method)) +
@@ -52,12 +55,13 @@ df %>%
 
 # identify の 平均線
 df %>%
-  filter(method == "Identify_MLEM2" | 
-           method == "Identify_MLEM2_OnlyK" | 
-           method == "Identify_MLEM2_Random" |
-           method == "Identify_MLEM2_SameCondition" |
-           method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
-           method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule") %>%
+  filter(#method == "Identify_MLEM2" | 
+         #method == "Identify_MLEM2_OnlyK" | 
+         #method == "Identify_MLEM2_Random" |
+         method == "Identify_MLEM2_SameCondition" |
+         #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
+         method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
+         method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   group_by(filename, k, p, method) %>%
@@ -115,7 +119,8 @@ df %>%
   mutate(result = paste0("$",result,"}$")) %>%
   spread(key = method, value = result) %>%
   #filter(k == 2 | k == 4 | k == 6 | k == 8) %>%
-  filter(k == 3 | k == 9 | k == 15 | k == 21) %>%
+  #filter(k == 3 | k == 9 | k == 15 | k == 21) %>%
+  filter(k == 5 | k == 15 | k == 25 | k == 35) %>%
   ungroup() %>%
   arrange(p) %>%
   data.frame(., row.names = paste0("(",.$p,",",.$k,")")) %>%
@@ -127,3 +132,45 @@ df %>%
     caption="特定度合いの実験結果" # LaTeX の \caption に相当
   )
 
+# ===========================================
+# latex 形式の表（横長）
+# ===========================================
+df %>%
+  filter(method == "Identify_MLEM2_OnlyK" | 
+           method == "Identify_MLEM2_Random" |
+           method == "Identify_MLEM2_SameCondition" |
+           #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
+           method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule") %>%
+  mutate(k = formatC(.$k, width=2, flag="0")) %>%
+  mutate(k = paste0("$k=",as.character(k),"$")) %>%
+  mutate(method = factor(.$method, 
+                         levels = c(#"Identify_MLEM2_RuleClusteringByConsistentSim",
+                                    "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule",
+                                    "Identify_MLEM2_Random",
+                                    "Identify_MLEM2_SameCondition",
+                                    "Identify_MLEM2_OnlyK"),
+                         labels = c(#"提案法1",
+                                    "Clustering",
+                                    "Random",
+                                    "Match",
+                                    "Only $k$"))) %>%
+  group_by(k,p,method) %>%
+  summarise(mean_acc = format(round(mean(identify,na.rm=T),3),nsmall=3), 
+            sd_acc = format(round(sd(identify,na.rm=T),3),nsmall=3)) %>% 
+  unite(col = result, mean_acc, sd_acc, sep="_{\\pm ") %>%
+  mutate(result = paste0("$",result,"}$")) %>%
+  spread(key = k, value = result) %>%
+  #filter(k == 2 | k == 4 | k == 6 | k == 8) %>%
+  #filter(k == 3 | k == 9 | k == 15 | k == 21) %>%
+  #filter(k == 5 | k == 15 | k == 25 | k == 35) %>%
+  ungroup() %>%
+  arrange(p) %>%
+  select(method, everything()) %>%
+  #data.frame(., row.names = paste0("(",.$p,",",.$k,")")) %>%
+  #select(-k,-p) %>%
+  latex(
+    file="",              # LaTeX ファイルの保存先
+    title="",            # 1行1列目のセルの内容
+    label="comparison_identify",       # LaTeX の \label に相当
+    caption="特定度合いの実験結果" # LaTeX の \caption に相当
+  )

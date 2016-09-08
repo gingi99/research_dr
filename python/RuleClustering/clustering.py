@@ -78,6 +78,43 @@ def getSimilarity(rule1, rule2, colnames, list_judgeNominal) :
             similarity += 0
     similarity /= len(colnames)
     return(similarity)
+    
+# =====================================
+# Rule 間の類似度を返す関数2
+# =====================================
+def getSimilarity2(rule1, rule2, colnames, list_judgeNominal) :
+    similarity = 0
+    for col in colnames :
+        # 両要素ともNAなら、1.0
+        if (not rule1.getValue(col)) and (not rule2.getValue(col)) :       
+            similarity += 1.0
+            #print("1.0")
+            continue
+        # どちらかがNAなら、0
+        if (not rule1.getValue(col)) or (not rule2.getValue(col)) :
+            similarity += 0
+            #print("0")
+            continue
+        # 名義属性なら
+        if list_judgeNominal[col] :
+            # 包含関係があるなら
+            if isEitherSuperList(rule1.getValue(col), rule2.getValue(col)):
+                similarity += 1.0
+                #print("1")
+            else :
+                similarity += 1/3
+                #print("1/3")
+        # 数値属性なら
+        else :
+            print("suuchi ha mada")
+            #v <- 1.0 - (x[[i]] - y[[i]])/(3.0 * sd)
+            #if(v < 0.0){
+                #v <- 0
+            #}
+            similarity += 0
+    similarity /= len(colnames)
+    return(similarity)
+
 
 # =====================================
 # ななめが発生するかを返す
@@ -195,7 +232,7 @@ def getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, 
             merged_rule = merged_rules[0]
             target_rules.remove(merged_rule)
 
-            # 斜めが発生しないルールを探す
+            # 斜め発生度合いを計算
             list_inconsistency = [getElementDiscernibieRule(r, merged_rule) for r in target_rules]
 
             # もっとも斜めが発生しないルールに絞る
@@ -273,7 +310,7 @@ def getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_jud
             merged_rule = merged_rules[0]
             target_rules.remove(merged_rule)
 
-            # 斜めが発生しないルールを探す
+            # 斜め発生度合いを計算
             list_inconsistency = [getElementDiscernibieRule(r, merged_rule) for r in target_rules]
 
             # もっとも斜めが発生しないルールに絞る
@@ -290,6 +327,79 @@ def getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_jud
                 max_similarity = np.max(list_similarities)
                 max_rules = [max_rules[i] for i,s in enumerate(list_similarities) if s == max_similarity]
                 
+            # 一意でなければ、条件部を構成する属性数で判断
+            if len(max_rules) > 1 :
+                list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in max_rules]
+                max_count = np.max(list_count_same_conditions)
+                max_rules = [max_rules[i] for i,c in enumerate(list_count_same_conditions) if c == max_count]
+                #print("Second : " + str(len(max_rules)))
+
+            # 一意でなければ、supportの小ささで判断           
+            if len(max_rules) > 1 :
+                list_supports = [len(r.getSupport()) for r in max_rules]
+                min_support = np.min(list_supports)
+                max_rules = [max_rules[i] for i,s in enumerate(list_supports) if s == min_support]
+                #print("Third : " + str(len(max_rules)))
+            
+            # 先頭のルールでmerge 
+            merge_rule = mergeRule(merged_rule, max_rules[0])
+            target_rules.remove(max_rules[0])
+            
+            # 新しいルールを追加
+            target_rules.append(merge_rule)
+            
+            # min_support 更新
+            min_support = mlem2.getMinSupport(target_rules)
+            print(min_support)
+        
+        rules_new.extend(target_rules)
+        rules_new.extend(no_target_rules)
+        
+    return(rules_new)
+    
+    
+# =====================================
+# Main 関数 : m以上のルールを使わず + ななめが発生しないように ×　similarity
+# =====================================
+def getRuleClusteringByConsistentTimesSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3) :
+    
+    rules_new = list()    
+    
+    # 結論部別
+    for cls in mlem2.getEstimatedClass(rules) :
+        cls_rules = [r for r in rules if r.getConsequent() == cls]
+
+        # m未満のルールとm以上のルールに分ける
+        target_rules = [r for r in cls_rules if len(r.getSupport()) < m]
+        no_target_rules = [r for r in cls_rules if r not in target_rules]
+        
+        # ルール群のサポート値の最小値がk以下のルールがある内は繰り返す
+        min_support = mlem2.getMinSupport(target_rules) if target_rules else 0
+        while min_support < k and target_rules:
+
+            # target_rules が 1つならそれを削除して繰り返しを抜ける
+            if len(target_rules) == 1 :
+                target_rules.pop()
+                break
+                
+            # merge対象ルールを見つける
+            merged_rules = [r for r in target_rules if len(r.getSupport()) == min_support]
+            merged_rule = merged_rules[0]
+            target_rules.remove(merged_rule)
+
+            # 斜め発生度合いを計算
+            list_inconsistency = [getElementDiscernibieRule(r, merged_rule) for r in target_rules]
+            
+            # 類似度を計算            
+            list_similarities = [getSimilarity2(merged_rule, r, colnames, list_judgeNominal) for r in target_rules] 
+
+            # 斜め発生度合い * 類似度
+            list_times = np.array(list_inconsistency) * np.array(list_similarities)
+
+            # もっとも斜めが発生しないルールに絞る
+            max_times = np.max(list_times)
+            max_rules = [target_rules[i] for i,c in enumerate(list_times) if c == max_times]
+
             # 一意でなければ、条件部を構成する属性数で判断
             if len(max_rules) > 1 :
                 list_count_same_conditions = [getCountSameCondition(merged_rule, r) for r in max_rules]
@@ -497,8 +607,8 @@ if __name__ == "__main__":
     #rules_new = getRuleClusteringByRandom(rules, k=3)
     #rules_new = getRuleClusteringBySameCondition(rules, k=3)
     #rules_new = getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=3)
-    rules_new = getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3)
-
+    #rules_new = getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3)
+    rules_new = getRuleClusteringByConsistentTimesSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=3, m=3)
 
     # predict by LERS
     filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'

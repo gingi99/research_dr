@@ -1,7 +1,10 @@
 # coding: utf-8
 # python 3.5
 from itertools import compress
+from itertools import chain
+from itertools import combinations
 from sklearn.metrics import accuracy_score
+import pandas as pd
 import mlem2
 
 # =====================================
@@ -142,3 +145,20 @@ if __name__ == "__main__":
     
     # 正答率を求める
     accuracy_score(decision_class, predictions)    
+    
+    # memo
+    filepath = '/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
+    decision_table_test = pd.read_csv(filepath, delimiter=' ', header=None)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    decision_table_test = decision_table_test.drop(decision_table_test.columns[len(decision_table_test.columns)-1], axis=1)
+    decision_table_test2 = decision_table_test.values.tolist()
+
+    couho = list(chain.from_iterable(decision_table_test2))
+    couho = list(set(couho))
+    p = 2
+    combi = combinations(couho,p)
+    for c in combi :
+        print(list(c))
+    

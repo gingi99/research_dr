@@ -10,7 +10,7 @@ library(compiler)
 # ---------------------
 # パラメータ
 # ---------------------
-kFilenames <- c("nursery")
+kFilenames <- c("german_credit_categorical")
 kIter1 <- 10
 kIter2 <- 10
   
@@ -19,9 +19,9 @@ for(fn in kFilenames){
   for(i in 1:kIter1){
     for(j in 1:kIter2){
       print(paste0("START : fn:",fn," i:", i," j:",j)) 
-      data.train <- read_tsv(paste("/data/uci/",fn,"/",fn,"-train",i,"-",j,".tsv", sep=""))
+      data.train <- read_tsv(paste("/mnt/data/uci/",fn,"/",fn,"-train",i,"-",j,".tsv", sep=""))
       data.train <- na.omit(data.train)
-      data.nominal <- read.csv(paste("/data/uci/",fn,"/",fn,".nominal", sep=""), sep=",", header=F)
+      data.nominal <- read.csv(paste("/mnt/data/uci/",fn,"/",fn,".nominal", sep=""), sep=",", header=F)
       data.nominal <- as.vector(as.matrix(data.nominal))
         
       # convert decisicon table class
@@ -29,13 +29,13 @@ for(fn in kFilenames){
       data.train   <- SF.asDecisionTable(data.train, decision.attr=ncol(data.train), indx.nominal=data.nominal)
         
       # 条件属性の離散化(と同時に、DecisionTable & data.frame型になってる)
-      source("~/roughsets/My.Discretization.R")
-      source("~/roughsets/My.ObjectFactory.R")
+      source("../roughsets/My.Discretization.R")
+      source("../roughsets/My.ObjectFactory.R")
       data.train <- D.discretization.RST(data.train,
                                         type.method = "convert.nominal")
         
-      source("~/roughsets/Rules.RST.R")
-      source("~/roughsets/My.RuleInduction.OtherFuncCollections.R")
+      source("../roughsets/Rules.RST.R")
+      source("../roughsets/My.RuleInduction.OtherFuncCollections.R")
       
       decision.table <- data.train
         
@@ -75,7 +75,7 @@ for(fn in kFilenames){
       
       # save
       write.table(df.la, 
-                  paste0("/data/uci/",fn,"/",fn,"-train-la-",i,"-",j,".tsv"), 
+                  paste0("/mnt/data/uci/",fn,"/",fn,"-train-la-",i,"-",j,".tsv"), 
                   sep='\t',row.names = F, quote =F)
       # 下近似だけを使うので残りを削除
       rm(INDrelation, approximations)

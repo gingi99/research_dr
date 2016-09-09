@@ -1,0 +1,110 @@
+RoughSets
+========================================================
+
+### 0.1 インストール方法
+```{r, eval=FALSE}
+install.packages("RoughSets")
+```
+
+### 0.2 参考URL
+- [RoughSetsのCRANのページ](http://cran.r-project.org/web/packages/RoughSets/index.html)
+- [RのRoughSetsイントロダクション](http://dicits.ugr.es/software/RoughSets/index.php)
+
+## 1. ライブラリ読み込み
+```{r}
+library(RoughSets)
+```
+
+## 2. データ
+```{r}
+## データを手動で作成
+dt.ex1 <- data.frame(c(1,0,2,1,1,2,2,0), c(0.5,1.2,0.1,1.2,0.4,2.2,1.1,1.5), c(2,1,0,0,2,0,1,1), c(0,2,1,2,1,1,2,1))
+colnames(dt.ex1) <- c("a", "b", "c", "d")
+
+## DecisionTableクラス作成
+DecTable.1 <- SF.asDecisionTable(dataset = dt.ex1, decision.attr = 4, indx.nominal = c(1,3:4))
+
+## 確認
+print.default(DecTable.1)
+
+## RoughSetsパッケージに用意されている7種のデータを読み込み
+data(RoughSetData)
+hiring.dt <- RoughSetData$hiring.dt
+housing.dt <- RoughSetData$housing.dt
+housing7.dt <- RoughSetData$housing7.dt
+pima.dt <- RoughSetData$pima.dt
+pima7.dt <- RoughSetData$pima7.dt
+wine.dt <- RoughSetData$wine.dt
+crx.dt <- RoughSetData$crx.dt
+```
+
+## 3. ラフ集合の基本演算
+```{r}
+## 例：2列目と3列目の識別不能関係を計算する
+IND <- BC.IND.relation.RST(hiring.dt, feature.set = c(2,3))
+print(IND)
+
+## 例：識別不能関係INDにもとづき、上近似と下近似を求める
+roughset <- BC.LU.approximation.RST(hiring.dt, IND)
+print(roughset)
+
+## 例：ラフ集合にもとづき、PositiveRegionを求める¥
+region <- BC.positive.reg.RST(hiring.dt, roughset)
+print(region)
+
+## 例：識別不能行列を求める
+disc.Mat <- BC.discernibility.mat.RST(hiring.dt)
+print(disc.Mat)
+```
+
+## 4. ファジィラフ集合の基本演算
+```{r}
+```
+
+## 5. LEM2
+- RI.LEM2Rules.RST Rule induction using the LEM2 algorithm
+
+```{r}
+set.seed(13)
+wine.dt1 <- wine.dt[sample(nrow(wine.dt)),]
+
+## Split the data into a training set and a test set,
+## 60% for training and 40% for testing:
+idx <- round(0.6 * nrow(wine.dt1))
+wine.tra1 <-SF.asDecisionTable(wine.dt1[1:idx,],
+                               decision.attr = 14,
+                               indx.nominal = 14)
+wine.tst1 <- SF.asDecisionTable(wine.dt1[(idx+1):nrow(wine.dt1), -ncol(wine.dt1)])
+true.classes <- wine.dt1[(idx+1):nrow(wine.dt1), ncol(wine.dt1)]
+    
+## discretization：5種類ほどMethodがある
+## nsupervised.intervals：
+## unsupervised.intervals：各ラベルの変域が同じになるように離散化
+## unsupervised.quantiles：各ラベルのサンプルの数が同じになるように離散化
+## local.disc.matrix：
+## max.disc.matrix：
+cut.values <- D.discretization.RST(wine.tra1,
+                                   type.method = "unsupervised.quantiles",
+                                   nOfIntervals = 3)
+data.tra1 <- SF.applyDecTable(wine.tra1, cut.values)
+data.tst1 <- SF.applyDecTable(wine.tst1, cut.values)
+
+## rule induction from the training set:
+#source("/home/ooki/R/roughsets/My.RI.LEM2Rules.RST.R")
+#source("/home/ooki/R/roughsets/My.RuleInduction.OtherFuncCollections.R")
+rules <- RI.LEM2Rules.RST(data.tra1)
+rules
+class(rules)
+str(rules)
+
+## predicitons for the test set:
+pred.vals1 <- predict(rules, data.tst1, votingMethod = X.ruleStrength)
+pred.vals2 <- predict(rules, data.tst1, votingMethod = X.laplace)
+pred.vals3 <- predict(rules, data.tst1, votingMethod = X.rulesCounting)
+
+## checking the accuracy of predictions:
+paste(sprintf("%.3f", mean(pred.vals1 == true.classes)),"±",sprintf("%.3f", sd(pred.vals1 == true.classes)), sep="")
+paste(sprintf("%.3f", mean(pred.vals2 == true.classes)),"±",sprintf("%.3f", sd(pred.vals2 == true.classes)), sep="")
+paste(sprintf("%.3f", mean(pred.vals3 == true.classes)),"±",sprintf("%.3f", sd(pred.vals3 == true.classes)), sep="")
+```
+

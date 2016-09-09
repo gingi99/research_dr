@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
 # Usage : spark-submit ~~.py
+# Usage : spark-submit --properties-file spark.conf ~~.py
 from pyspark.context import SparkContext
 from pyspark.mllib.fpm import FPGrowth
 from pyspark import StorageLevel
+from pyspark import SparkConf
 import sys
 import collections
 import pandas as pd
@@ -14,6 +16,9 @@ from itertools import product
 from sklearn.metrics import accuracy_score
 from multiprocessing import Pool
 from multiprocessing import freeze_support
+
+# Global Setting
+DIR_UCI = '/mnt/data/uci'
 
 # ------------------------------------------------------
 # Rule Class
@@ -134,7 +139,7 @@ def estimateClass(obj, rules) :
 def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0, numPartitions=10) :
     
     # read data
-    filepath = '/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.txt'
+    filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.txt'
     data = sc.textFile(filepath)
     transactions = data.map(lambda line: line.strip().split(' '))
 
@@ -145,27 +150,62 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0,
     # model 定義
     model = FPGrowth.train(transactions, minSupport=minSupport, numPartitions=numPartitions)
     
-    # 実行
-    result = model.freqItemsets().collect()
+    # クラスを含まない頻出アイテム集合だけを取り出す
+    nocls_freq_item_sets = model.freqItemsets().filter(lambda fis: all(not x in fis.items for x in classes))
+    # クラスを含む頻出アイテム集合でかつ長さが2以上のものを取り出す
+    cls_freq_item_sets = model.freqItemsets().filter(lambda fis: any(x in fis.items for x in classes)).filter(lambda fis: len(fis.items) > 1).collect()
 
-    # class 
+    #for cls in classes:
+        # クラスを含む頻出アイテム集合だけ取り出す
+        #cls_freq_item_sets = model.freqItemsets().filter(lambda fis: cls in fis.items)
+
+    # クラスを含む頻出アイテム集合について繰り返し
     rules = []
-    for cls in classes:
-        for fi1 in result:
-            if cls in fi1.items:
-                target = [x for x in fi1.items if x != cls]
-                for fi2 in result:
-                    if collections.Counter(target) == collections.Counter(fi2.items):
-                        conf = float(fi1.freq) / float(fi2.freq)
-                        if conf >= min_conf:
-                            rule = Rule()
-                            rule.setValue(fi2.items)
-                            rule.setConsequent(cls)
-                            rule.setSupport(fi1.freq)
-                            rule.setConf(conf)
-                            rules.append(rule)
+    for cls_freq_item in cls_freq_item_sets:
+
+        # クラス以外の分が同じアイテムでかつ長さが1違いのアイテムを取り出す
+        nocls_freq_item = nocls_freq_item_sets.filter(lambda ifs : all(x in cls_freq_item.items for x in ifs.items)).filter(lambda fis: len(fis.items) == len(cls_freq_item.items) - 1).first()
+   
+        print(cls_freq_item)
+        print(nocls_freq_item) 
+        #for nocls_freq_item in nocls_freq_item_sets:
+        #    # クラス以外の部分が同じアイテムでかつ長さが1違いのアイテムを取り出す
+        #    cls_freq_item = cls_freq_item_sets.filter(lambda fis: (all(x in fis.items for x in nocls_freq_item.items))).filter(lambda fis: len(fis.items) == len(nocls_freq_item.items) + 1).collect()
+        #    if cls_freq_item:
+        conf = float(cls_freq_item.freq) / float(nocls_freq_item.freq)
+        if conf >= min_conf:
+            rule = Rule()
+            rule.setValue(nocls_freq_item.items)
+            cls = list(set(cls_freq_item.items) & set(nocls_freq_item.items))[0]
+            rule.setConsequent(cls)
+            rule.setSupport(cls_freq_item.freq)
+            rule.setConf(conf)
+            rules.append(rule)
 
     return(rules)
+
+    # === 古いやつは下
+    
+    # 実行
+    #result = model.freqItemsets().collect()
+
+    # class 
+    #rules = []
+    #for cls in classes:
+    #    for fi1 in result:
+    #        if cls in fi1.items:
+    #            target = [x for x in fi1.items if x != cls]
+    #            for fi2 in result:
+    #                if collections.Counter(target) == collections.Counter(fi2.items):
+    #                    conf = float(fi1.freq) / float(fi2.freq)
+    #                    if conf >= min_conf:
+    #                        rule = Rule()
+    #                        rule.setValue(fi2.items)
+    #                        rule.setConsequent(cls)
+    #                        rule.setSupport(fi1.freq)
+    #                        rule.setConf(conf)
+    #                        rules.append(rule)
+    #return(rules)
 
 # ======================================================
 # LERS による精度評価
@@ -173,7 +213,7 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0,
 def predictByLERS(FILENAME, iter1, iter2, rules) :
     
     # read test data
-    filepath = '/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
+    filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
     decision_table_test = pd.read_csv(filepath, delimiter=' ', header=None)
     decision_table_test = decision_table_test.dropna()
     decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
@@ -206,7 +246,7 @@ def FPGrowth_LERS(FILENAME, iter1, iter2, min_sup):
     accuracy = predictByLERS(FILENAME, iter1, iter2, rules)
     
     # save
-    savepath = '/data/uci/'+FILENAME+'/FPGrowth_LERS.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth_LERS.csv'
     with open(savepath, "a") as f :
         f.writelines('FPGrowth_LERS,{min_sup},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,min_sup=min_sup)+"\n")
 
@@ -245,24 +285,38 @@ def multi_main(proc, FILENAME, FUN, **kargs):
 # ======================================================
 if __name__ == "__main__":
 
-    SparkContext.setSystemProperty('spark.executor.memory', '64g')
-    sc = SparkContext("local[2]", appName="Sample FP-growth")
-    sc.setLogLevel("ERROR")
+    # Spark の設定
+    #SparkContext.setSystemProperty('spark.executor.memory', '128g')
+    #SparkContext.setSystemProperty('spark.driver.memory', '128g')
+    #sc = SparkContext("local[4]", appName="Sample FP-growth")
+    #sc.setLogLevel("ERROR")
+
+    sc = SparkContext(conf=SparkConf())
 
     # データ準備
     #FILEPATH = "/usr/local/share/spark/data/mllib/sample_fpgrowth.txt"
     #"/data/uci/hayes-roth/alpha/hayes-roth-train2-10.txt"
-    #FILENAME = "hayes-roth" 
-    FILENAME = "nursery" 
+    FILENAME = "hayes-roth" 
+    #FILENAME = "nursery" 
+    #FILENAME = "german_credit_categorical" 
+
+    # データのインデックス
     iter1 = 6 
     iter2 = 9 
-    #classes = ['D1', 'D2', 'D3']
-    classes = ['D1', 'D2', 'D3', 'D4', 'D5']
+  
+    # クラスの数を設定
+    classes = ['D1', 'D2', 'D3']
+    #classes = ['D1', 'D2', 'D3', 'D4', 'D5']
+    #classes = ['D1', 'D2']
+
+    # support と confidence の閾値
     min_sup = 2
     #min_sup_range = range(3,11,1)
     min_sup_range = range(3,30,3)
     min_conf = 1.0
-    savepath = '/data/uci/'+FILENAME+'/FPGrowth_LERS.csv'
+
+    # ファイルを保存する場所
+    savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth_LERS.csv'
  
     # rule 抽出
     #rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)

@@ -11,6 +11,7 @@ library(compiler)
 # パラメータ
 # ---------------------
 kFilenames <- c("german_credit_categorical")
+setwd("/Users/ooki/git/research_dr/R/createData")
 kIter1 <- 10
 kIter2 <- 10
   

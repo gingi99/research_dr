@@ -138,7 +138,7 @@ createDataForCrossValidation <- function(filename, n, m){
     }
   }
 }
-#createDataForCrossValidation("/data/uci/bank/bank.tsv", 10, 10)
+#createDataForCrossValidation("/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", 10, 10)
 
 ## Adult's data cleansing
 adult <- fread("/data/uci/adult/adult.tsv")
@@ -158,4 +158,6 @@ credit_categorical <- fread("/mnt/data/uci/german_credit/german_credit.tsv")
 credit_categorical$Duration_of_Credit_month <- cut(credit_categorical$Duration_of_Credit_month, breaks=c(0,6,12,18,24,30,36,42,48,54), right = TRUE, include.lowest = TRUE)
 credit_categorical$Credit_Amount <- cut(credit_categorical$Credit_Amount,breaks=c(0,500,1000,1500,2500,5000,7500,10000,15000,20000), right = TRUE, include.lowest = TRUE)
 credit_categorical$Age_years <- cut(credit_categorical$Age_years, breaks=c(0,25,39,59,64,65,999), right = TRUE, include.lowest = TRUE)
-write.table(credit_categorical, "/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+names(credit_categorical)[length(credit_categorical)] <- "class"
+credit_categorical$class <- credit_categorical$class + 1
+#write.table(credit_categorical, "/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", sep="\t", quote=FALSE, row.names=FALSE)

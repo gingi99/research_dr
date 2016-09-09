@@ -5,6 +5,10 @@ from itertools import chain
 from itertools import combinations
 from sklearn.metrics import accuracy_score
 import pandas as pd
+import sys
+import os
+#sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
+#sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
 import mlem2
 
 # =====================================
@@ -111,7 +115,7 @@ def predictByLERS(rules, decision_table_test, list_judgeNominal) :
     nominals = list(compress(decision_table_test.columns.tolist(),list_judgeNominal))
     decision_table_test[nominals] = decision_table_test[nominals].astype(str)
       
-    # 各行に対して予
+    # 各行に対して予測
     predictions = decision_table_test.apply(lambda obj: predictClass(obj, rules, list_judgeNominal), axis=1)    
         
     # predictionsの型を正しくする
@@ -124,19 +128,20 @@ def predictByLERS(rules, decision_table_test, list_judgeNominal) :
 # ========================================
 if __name__ == "__main__":
 
+    FILENAME = 'german_credit_categorical'    
     FILENAME = 'hayes-roth'
-    iter1 = 7
-    iter2 = 5
+    iter1 = 1
+    iter2 = 1
     
     # rule induction
     rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
 
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = '/mnt/data/uci/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table_test = mlem2.getDecisionTable(filepath)
     decision_table_test = decision_table_test.dropna()
     decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
 
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    filepath = '/mnt/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
     
@@ -147,7 +152,7 @@ if __name__ == "__main__":
     accuracy_score(decision_class, predictions)    
     
     # memo
-    filepath = '/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
+    filepath = '/mnt/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
     decision_table_test = pd.read_csv(filepath, delimiter=' ', header=None)
     decision_table_test = decision_table_test.dropna()
     decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()

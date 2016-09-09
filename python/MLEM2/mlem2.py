@@ -97,6 +97,7 @@ class Rule2 :
            i = iter(self.value[idx])
            if any(i) and not any(i) and onecase : return(self.value[idx][0])
            else : return(self.value[idx])
+   # consequent = 0 のときうまくいかない   
    def getConsequent(self) :
        i = iter(self.consequent)
        if any(i) and not any(i) : return(self.consequent[0])
@@ -490,6 +491,8 @@ def isSuperList(list_a, list_b) :
 # =====================================
 def getRulesByMLEM2(FILENAME, iter1, iter2) :
     
+    print(str(iter1),str(iter2))    
+    
     # read data
     filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = getDecisionTable(filepath)
@@ -624,9 +627,9 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'hayes-roth'
-    iter1 = 4
-    iter2 = 5
+    FILENAME = 'german_credit_categorical'
+    iter1 = 1
+    iter2 = 1
     
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)
 

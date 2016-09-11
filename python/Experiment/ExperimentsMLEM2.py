@@ -520,14 +520,14 @@ if __name__ == "__main__":
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
     # 実行したい実験関数
-    FUN = MLEM2_LERS
+    #FUN = MLEM2_LERS
     #FUN = MLEM2_OnlyK_LERS
     #FUN = MLEM2_RuleClusteringBySim_LERS
     #FUN = MLEM2_RuleClusteringByRandom_LERS
     #FUN = MLEM2_RuleClusteringBySameCondition_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSim_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
+    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
     
     FUNS = [MLEM2_LERS,
             MLEM2_OnlyK_LERS,

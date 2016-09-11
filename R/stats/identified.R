@@ -19,7 +19,8 @@ library(Hmisc)
 FILENAME <- "adult_cleansing2"
 FILENAME <- "nursery"
 FILENAME <- "hayes-roth"
-DIRPATH <- paste0("/data/uci/",FILENAME)
+FILENAME <- "german_credit_categorical"
+DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.target <- files.all[str_detect(files.all, "Identify")]
 df <- lapply(files.target, function(f){
@@ -39,9 +40,9 @@ df %>%
 
 # identify の boxplot
 df %>%
-  filter(#method == "Identify_MLEM2" | 
-         #method == "Identify_MLEM2_OnlyK" | 
-         #method == "Identify_MLEM2_Random" |
+  filter(method == "Identify_MLEM2" | 
+         method == "Identify_MLEM2_OnlyK" | 
+         method == "Identify_MLEM2_Random" |
          method == "Identify_MLEM2_SameCondition" |
          #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
          method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
@@ -55,9 +56,9 @@ df %>%
 
 # identify の 平均線
 df %>%
-  filter(#method == "Identify_MLEM2" | 
-         #method == "Identify_MLEM2_OnlyK" | 
-         #method == "Identify_MLEM2_Random" |
+  filter(method == "Identify_MLEM2" | 
+         method == "Identify_MLEM2_OnlyK" | 
+         method == "Identify_MLEM2_Random" |
          method == "Identify_MLEM2_SameCondition" |
          #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
          method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |

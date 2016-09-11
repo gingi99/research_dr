@@ -511,20 +511,20 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
     #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
     
-    #FUNS = [MLEM2_LERS,
-    #        MLEM2_OnlyK_LERS,
-    #        MLEM2_RuleClusteringBySim_LERS,
-    #        MLEM2_RuleClusteringByRandom_LERS,
-    #        MLEM2_RuleClusteringBySameCondition_LERS,
-    #        MLEM2_RuleClusteringByConsistentSim_LERS,
-    #        MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS]
+    FUNS = [MLEM2_LERS,
+            MLEM2_OnlyK_LERS,
+            #MLEM2_RuleClusteringBySim_LERS,
+            MLEM2_RuleClusteringByRandom_LERS,
+            MLEM2_RuleClusteringBySameCondition_LERS,
+            #MLEM2_RuleClusteringByConsistentSim_LERS,
+            MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS]
 
     # 並列実行
-    proc=4
+    proc=48
     freeze_support()
     
-    #for FUN in FUNS :
-    results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    for FUN in FUNS :
+        results = multi_main(proc, FILENAMES, FUN, k = k_range)
     # 平均と分散
     print(getEvalMeanVar(results))
     

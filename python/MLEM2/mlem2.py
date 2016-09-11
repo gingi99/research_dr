@@ -193,7 +193,15 @@ def getPerKRules(list_rules, k) :
 def getEstimatedClass(list_rules) :
     consequents = list(set(r.getConsequent() for r in list_rules))
     return(consequents)
-    
+
+# =====================================
+# Rules のうち Suppprt = n の割合
+# =====================================    
+def getPerNSupport(list_rules, n) :
+    n_rules = [r for r in list_rules if len(r.getSupport()) == n]
+    ans = len(n_rules) / len(list_rules)
+    return(ans)
+
 # =====================================
 # Rules のうち、P個の属性値が分かれば、クラスを推定できるか
 # =====================================

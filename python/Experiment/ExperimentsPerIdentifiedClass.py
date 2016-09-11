@@ -18,13 +18,16 @@ importlib.reload(LERS)
 import clustering
 importlib.reload(clustering) 
 
+# Grobal setting
+DIR_UCI = '/mnt/data/uci'
+
 # ====================================
 # MLEM2 による特定化実験
 # ====================================
 def MLEM2_Identified(FILENAME, iter1, iter2, p) :
           
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename =DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
@@ -34,7 +37,7 @@ def MLEM2_Identified(FILENAME, iter1, iter2, p) :
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2,1,{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -46,14 +49,14 @@ def MLEM2_Identified(FILENAME, iter1, iter2, p) :
 def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
           
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
     
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # only-k rule filter
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_onlyK/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_onlyK/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else [r for r in rules if len(r.getSupport()) >= k]
     
     # rule save
@@ -63,7 +66,7 @@ def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_OnlyK.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_OnlyK.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_OnlyK,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -74,29 +77,29 @@ def MLEM2_OnlyK_Identified(FILENAME, iter1, iter2, k, p) :
 # ====================================
 def MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = mlem2.getDecisionTable(filepath)
     colnames = mlem2.getColNames(decision_table)
     
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
 
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_consistent_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_consistent_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
 
     # PerIdentifiedClass を求める
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -107,29 +110,29 @@ def MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified(FILENAME, iter1, i
 # ====================================
 def MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = mlem2.getDecisionTable(filepath)
     colnames = mlem2.getColNames(decision_table)
     
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
 
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_consistent_times_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_consistent_times_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentTimesSimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
 
     # PerIdentifiedClass を求める
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -141,22 +144,22 @@ def MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified(FILENAME, ite
 def MLEM2_RuleClusteringByConsistentSim_Identified(FILENAME, iter1, iter2, k, p) :
           
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table = mlem2.getDecisionTable(filepath)
     colnames = mlem2.getColNames(decision_table)
     
-    filepath = '/data/uci/'+FILENAME+'/'+FILENAME+'.nominal'
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
 
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_consistent_sim/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_consistent_sim/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentSimilarity(rules, colnames, list_judgeNominal, k=k)
 
     # rule save
@@ -166,7 +169,7 @@ def MLEM2_RuleClusteringByConsistentSim_Identified(FILENAME, iter1, iter2, k, p)
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentSim.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentSim.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_RuleClusteringByConsistentSim,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -179,14 +182,14 @@ def MLEM2_RuleClusteringByConsistentSim_Identified(FILENAME, iter1, iter2, k, p)
 def MLEM2_RuleClusteringByRandom_Identified(FILENAME, iter1, iter2, k, p) :
           
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_random/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_random/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByRandom(rules, k=k)
 
     # rule save
@@ -196,7 +199,7 @@ def MLEM2_RuleClusteringByRandom_Identified(FILENAME, iter1, iter2, k, p) :
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_Random.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_Random.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_Random,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -208,14 +211,14 @@ def MLEM2_RuleClusteringByRandom_Identified(FILENAME, iter1, iter2, k, p) :
 def MLEM2_RuleClusteringBySameCondition_Identified(FILENAME, iter1, iter2, k, p) :
           
     # rule induction
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
     # rule save
     if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
 
     # rule clustering
-    fullpath_filename = '/data/uci/'+FILENAME+'/rules_cluster_same_condition/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_same_condition/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySameCondition(rules, k=k)
 
     # rule save
@@ -225,7 +228,7 @@ def MLEM2_RuleClusteringBySameCondition_Identified(FILENAME, iter1, iter2, k, p)
     ans = mlem2.getPerIdentifiedClass(rules, p)
         
     # save
-    savepath = '/data/uci/'+FILENAME+'/Identify_MLEM2_SameCondition.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_SameCondition.csv'
     with open(savepath, "a") as f :
         f.writelines('Identify_MLEM2_SameCondition,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
     
@@ -309,9 +312,11 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['hayes-roth']
+    #FILENAMES = ['hayes-roth']
+    FILENAMES = ['german_credit_categorical']
     #FILENAMES = ['nursery']
-    k_range = range(2,11,1)
+    #k_range = range(2,11,1)
+    k_range = range(2,20,2)
     #k_range = range(3,30,3)
     
     # シングルプロセスで実行
@@ -320,13 +325,13 @@ if __name__ == "__main__":
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
     # 実行したい実験関数
-    #FUN = MLEM2_Identified
+    FUN = MLEM2_Identified
     #FUN = MLEM2_OnlyK_Identified
     #FUN = MLEM2_RuleClusteringByRandom_Identified
     #FUN = MLEM2_RuleClusteringBySameCondition_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSim_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified
-    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
+    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
 
     #FUNS = [MLEM2_Identified,
     #        MLEM2_OnlyK_Identified,

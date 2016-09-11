@@ -23,6 +23,24 @@ importlib.reload(clustering)
 DIR_UCI = '/mnt/data/uci'
 
 # ====================================
+# Rules の　N Supportを満たす割合
+# ====================================
+def MLEM2_PerN(FILENAME, n) :
+
+    ans = 0.0
+    for iter1, iter2 in product(range(1,11), range(1,11)):
+        # rule induction
+        fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+        rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+
+        # n per support
+        per_n_support = mlem2.getPerNSupport(rules, n)
+        ans += per_n_support
+        print(per_n_support)
+    ans /= 100
+    print(ans)
+
+# ====================================
 # MLEM2 - LERS による正答率実験
 # ====================================
 def MLEM2_LERS(FILENAME, iter1, iter2) :

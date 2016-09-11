@@ -32,7 +32,18 @@ df <- lapply(files.target, function(f){
 # ===========================================
 
 df %>%
-  setnames(c("method","k","p","filename","iter1","iter2","identify"))
+  setnames(c("method","k","p","filename","iter1","iter2","identify")) %>%
+  mutate(filename = "german_credit") -> df
+
+# ===========================================
+# MLEM2 だけ
+# ===========================================
+df %>%
+  dplyr::filter(method == "Identify_MLEM2") %>%
+  group_by(k,p,method) %>%
+  summarise(mean_acc = format(round(mean(identify,na.rm=T),3),nsmall=3), 
+            sd_acc = format(round(sd(identify,na.rm=T),3),nsmall=3)) %>% 
+  unite(col = result, mean_acc, sd_acc, sep="_{\\pm ")
 
 # ===========================================
 # 可視化
@@ -51,36 +62,56 @@ df %>%
   mutate(k = as.character(k)) %>%
   ggplot(aes(x=k, y=identify, color=method)) +
     geom_boxplot() +
-    facet_grid(filename~p) +
+    facet_grid(p~method) +
     theme(legend.position = "bottom")
 
 # identify の 平均線
 df %>%
-  filter(method == "Identify_MLEM2" | 
+  filter(#method == "Identify_MLEM2" | 
          method == "Identify_MLEM2_OnlyK" | 
          method == "Identify_MLEM2_Random" |
          method == "Identify_MLEM2_SameCondition" |
          #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
          method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
          method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule") %>%
-  mutate(k = formatC(.$k, width=2, flag="0")) %>%
-  mutate(k = as.character(k)) %>%
+  mutate(k = paste0("k=",formatC(.$k, width=2, flag="0"))) %>%
+  mutate(p = paste0("p=",p)) %>%
   group_by(filename, k, p, method) %>%
   summarise(mean_identify = mean(identify,na.rm=T), 
             sd_identify = sd(identify,na.rm=T)) %>% 
-  ggplot(aes(x=k, y=mean_identify, group = method, color=method)) +
+  ggplot(aes(x=k, y=mean_identify, group = method, linetype=method,shape=method)) +
     geom_line() +
-    geom_point(size=3, shape = 21) +
-    facet_grid(p~filename) +
-    scale_y_continuous(breaks = seq(0.0,1.0,by=0.1)) +
-    scale_color_brewer(palette = "Set1") +
-    labs(x="k", y="正答率の平均値") +
+    geom_point(size=3) +
+    facet_grid(p~filename,scales = "free") +
+    scale_y_continuous(breaks = seq(0.0,1.0,by=0.05)) +
+    #scale_color_brewer(name = "Method", palette = "Set1") +
+    #scale_color_discrete(name="Method",
+    #                     breaks=c("Identify_MLEM2_OnlyK", 
+    #                              "Identify_MLEM2_Random",
+    #                              "Identify_MLEM2_SameCondition",
+    #                              "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
+    #                     labels=c("Only K", "Random", "Match", "Clustering")) +
+    scale_shape_discrete(name="Method",
+                       breaks=c("Identify_MLEM2_OnlyK", 
+                                "Identify_MLEM2_Random",
+                                "Identify_MLEM2_SameCondition",
+                                "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
+                       labels=c("Only K", "Random", "Match", "Clustering")) +
+    scale_linetype_discrete(name="Method",
+                            breaks=c("Identify_MLEM2_OnlyK", 
+                                     "Identify_MLEM2_Random",
+                                     "Identify_MLEM2_SameCondition",
+                                     "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
+                            labels=c("Only K", "Random", "Match", "Clustering")) +
+    #labs(x="k", y="正答率の平均値") +
+    labs(x="k", y="") +
     theme_bw(base_family = "HiraKakuProN-W3") +
     theme(axis.title.x = element_text(size=15)) +
     theme(axis.text.x = element_text(size=12)) +
     theme(axis.title.y = element_text(size=15)) +
     theme(axis.text.y = element_text(size=12)) +
     theme(legend.position = "bottom")
+    #theme(legend.position = c(0.1, 0.9))
 
 # ===========================================
 # MLEM2 のみ

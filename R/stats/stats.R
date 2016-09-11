@@ -19,7 +19,8 @@ library(rlist)
 FILENAME <- "hayes-roth"
 FILENAME <- "nursery"
 FILENAME <- "adult_cleansing2"
-DIRPATH <- paste0("/data/uci/",FILENAME)
+FILENAME <- "german_credit_categorical"
+DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.target <- files.all[str_detect(files.all, "LERS")]
 df <- lapply(files.target, function(f){

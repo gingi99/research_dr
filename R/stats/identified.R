@@ -20,12 +20,16 @@ FILENAME <- "adult_cleansing2"
 FILENAME <- "nursery"
 FILENAME <- "hayes-roth"
 FILENAME <- "german_credit_categorical"
-DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
-files.all <- list.files(DIRPATH)
-files.target <- files.all[str_detect(files.all, "Identify")]
-df <- lapply(files.target, function(f){
-  return(read_csv(paste0(DIRPATH,"/",f), col_names = F))
-}) %>% list.stack()   
+FILENAMES <- c("adult_cleansing2", "nursery", "hayes-roth", "german_credit_categorical")
+df <- data.frame()
+for(FILENAME in FILENAMES){DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
+  files.all <- list.files(DIRPATH)
+  files.target <- files.all[str_detect(files.all, "Identify")]
+  df.tmp <- lapply(files.target, function(f){
+    return(read_csv(paste0(DIRPATH,"/",f), col_names = F))
+  }) %>% list.stack()
+  df <- dplyr::bind_rows(df, df.tmp)
+}
 
 # ===========================================
 # データクレンジング
@@ -33,7 +37,14 @@ df <- lapply(files.target, function(f){
 
 df %>%
   setnames(c("method","k","p","filename","iter1","iter2","identify")) %>%
-  mutate(filename = "german_credit") -> df
+  mutate(filename = factor(filename, levels = c("adult_cleansing2",
+                                                "german_credit_categorical",
+                                                "hayes-roth", 
+                                                "nursery"),
+                           labels = c("adult",
+                                      "german-credit",
+                                      "hayes-roth", 
+                                      "nursery")))-> df
 
 # ===========================================
 # MLEM2 だけ
@@ -82,8 +93,8 @@ df %>%
   ggplot(aes(x=k, y=mean_identify, group = method, linetype=method,shape=method)) +
     geom_line() +
     geom_point(size=3) +
-    facet_grid(p~filename,scales = "free") +
-    scale_y_continuous(breaks = seq(0.0,1.0,by=0.05)) +
+    facet_grid(p ~ filename, scales = "free") +
+    scale_y_continuous(breaks = seq(0.0,1.0,by=0.10)) +
     #scale_color_brewer(name = "Method", palette = "Set1") +
     #scale_color_discrete(name="Method",
     #                     breaks=c("Identify_MLEM2_OnlyK", 
@@ -104,12 +115,12 @@ df %>%
                                      "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
                             labels=c("Only K", "Random", "Match", "Clustering")) +
     #labs(x="k", y="正答率の平均値") +
-    labs(x="k", y="") +
+    labs(x="", y="") +
     theme_bw(base_family = "HiraKakuProN-W3") +
     theme(axis.title.x = element_text(size=15)) +
-    theme(axis.text.x = element_text(size=12)) +
+    theme(axis.text.x = element_text(size=10, angle = 45, hjust = 1)) +
     theme(axis.title.y = element_text(size=15)) +
-    theme(axis.text.y = element_text(size=12)) +
+    theme(axis.text.y = element_text(size=10)) +
     theme(legend.position = "bottom")
     #theme(legend.position = c(0.1, 0.9))
 

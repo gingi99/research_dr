@@ -85,6 +85,11 @@ df %>%
          #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
          method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
          method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule") %>%
+  mutate(method = factor(method, levels = c("Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule", 
+                                            "Identify_MLEM2_Random",
+                                            "Identify_MLEM2_SameCondition",
+                                            "Identify_MLEM2_OnlyK"),
+                         labels = c("Clustering", "Random", "Match", "Only K"))) %>%
   mutate(k = paste0("k=",formatC(.$k, width=2, flag="0"))) %>%
   mutate(p = paste0("p=",p)) %>%
   group_by(filename, k, p, method) %>%
@@ -102,18 +107,8 @@ df %>%
     #                              "Identify_MLEM2_SameCondition",
     #                              "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
     #                     labels=c("Only K", "Random", "Match", "Clustering")) +
-    scale_shape_discrete(name="Method",
-                       breaks=c("Identify_MLEM2_OnlyK", 
-                                "Identify_MLEM2_Random",
-                                "Identify_MLEM2_SameCondition",
-                                "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
-                       labels=c("Only K", "Random", "Match", "Clustering")) +
-    scale_linetype_discrete(name="Method",
-                            breaks=c("Identify_MLEM2_OnlyK", 
-                                     "Identify_MLEM2_Random",
-                                     "Identify_MLEM2_SameCondition",
-                                     "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule"),
-                            labels=c("Only K", "Random", "Match", "Clustering")) +
+    scale_shape_discrete(name="Method") +
+    scale_linetype_discrete(name="Method") +
     #labs(x="k", y="正答率の平均値") +
     labs(x="", y="") +
     theme_bw(base_family = "HiraKakuProN-W3") +

@@ -541,8 +541,8 @@ if __name__ == "__main__":
     proc=48
     freeze_support()
     
-    for FUN in FUNS :
-        results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    #for FUN in FUNS :
+    results = multi_main(proc, FILENAMES, FUN, k = k_range)
     # 平均と分散
     print(getEvalMeanVar(results))
     

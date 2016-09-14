@@ -139,6 +139,72 @@ def MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified(FILENAME, ite
     return(ans)
 
 # ====================================
+# MLEM2 - RuleClustering by Sim Except M Support - Identified 実験
+# ====================================
+def MLEM2_RuleClusteringBySimExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
+    # rule induction
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # rule clustering
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
+
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_RuleClusteringBySimExceptMRule.csv'
+    with open(savepath, "a") as f :
+        f.writelines('Identify_MLEM2_RuleClusteringBySimExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
+
+# ====================================
+# MLEM2 - RuleClustering by Consistency Except M Support - Identified 実験
+# ====================================
+def MLEM2_RuleClusteringByConsistentExceptMRule_Identified(FILENAME, iter1, iter2, k, m, p) :
+    # rule induction
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # rule clustering
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_consistent_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
+
+    # PerIdentifiedClass を求める
+    ans = mlem2.getPerIdentifiedClass(rules, p)
+        
+    # save
+    savepath = DIR_UCI+'/'+FILENAME+'/Identify_MLEM2_RuleClusteringByConsistentExceptMRule.csv'
+    with open(savepath, "a") as f :
+        f.writelines('Identify_MLEM2_RuleClusteringByConsistentExceptMRule,{k},{p},{FILENAME},{iter1},{iter2},{ans}'.format(FILENAME=FILENAME,k=k,p=p,iter1=iter1,iter2=iter2,ans=ans)+"\n")
+    
+    return(ans)
+
+# ====================================
 # MLEM2 - RuleClustering by Consistent+Sim - LERS による正答率実験
 # ====================================
 def MLEM2_RuleClusteringByConsistentSim_Identified(FILENAME, iter1, iter2, k, p) :
@@ -270,7 +336,23 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
             multiargs.append((FILENAME,iter1,iter2,k,k,p))
         results.extend(pool.starmap(FUN, multiargs))
-        
+            
+    # MLEM2_RuleClusteringBySimExceptMRule_Identified 用
+    elif FUN == MLEM2_RuleClusteringBySimExceptMRule_Identified :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        #for k in k_range:
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k))
+        results.extend(pool.starmap(FUN, multiargs))
+    
+    # MLEM2_RuleClusteringByConsistentExceptMRule_Identified 用
+    elif FUN == MLEM2_RuleClusteringByConsistentExceptMRule_Identified :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        #for k in k_range:
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k))
+        results.extend(pool.starmap(FUN, multiargs))
+    
     # MLEM2_OnlyK_Identified 用
     elif FUN == MLEM2_OnlyK_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
@@ -312,9 +394,11 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
+    #FILENAMES = ['adult_cleansing2']
     #FILENAMES = ['hayes-roth']
     FILENAMES = ['german_credit_categorical']
     #FILENAMES = ['nursery']
+    #k_range = range(5,45,5)
     #k_range = range(2,11,1)
     k_range = range(2,20,2)
     #k_range = range(3,30,3)
@@ -331,7 +415,9 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySameCondition_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSim_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified
-    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
+    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
+    FUN = MLEM2_RuleClusteringBySimExceptMRule_Identified
+    FUN = MLEM2_RuleClusteringByConsistentExceptMRule_Identified
 
     FUNS = [MLEM2_Identified,
             MLEM2_OnlyK_Identified,
@@ -344,8 +430,8 @@ if __name__ == "__main__":
     proc=48
     freeze_support()
     
-    #for FUN in FUNS :
-    results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    for FUN in FUNS :
+        results = multi_main(proc, FILENAMES, FUN, k = k_range)
 
     # 平均と分散
     print(getEvalMeanVar(results))  

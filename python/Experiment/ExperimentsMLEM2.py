@@ -271,7 +271,108 @@ def MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS(FILENAME, iter1, it
         f.writelines('MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
     
     return(accuracy)
+    
+# ====================================
+# MLEM2 - RuleClustering by Similarity Except M Support - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringBySimExceptMRule_LERS(FILENAME, iter1, iter2, k, m) :
+    # rule induction
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
 
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # rule clustering
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # test data setup
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    
+    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
+    #logging.info('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    savepath = DIR_UCI+'/'+FILENAME+'/MLEM2_RuleClusteringBySimExceptMRule_LERS.csv'
+    with open(savepath, "a") as f :
+        f.writelines('MLEM2_RuleClusteringBySimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
+    
+    return(accuracy)
+
+
+# ====================================
+# MLEM2 - RuleClustering by Consistent Except M Support - LERS による正答率実験
+# ====================================
+def MLEM2_RuleClusteringByConsistentExceptMRule_LERS(FILENAME, iter1, iter2, k, m) :
+    # rule induction
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2) 
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # rule clustering
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    colnames = mlem2.getColNames(decision_table)
+    
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
+
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_consistent_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringByConsistentExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
+
+    # rule save
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename) 
+
+    # test data setup
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    
+    #print('{FILENAME} : {iter1} {iter2}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2))    
+    #logging.info('MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy))
+    savepath = DIR_UCI+'/'+FILENAME+'/MLEM2_RuleClusteringByConsistentExceptMRule_LERS.csv'
+    with open(savepath, "a") as f :
+        f.writelines('MLEM2_RuleClusteringByConsistentExceptMRule_LERS,{k},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,k=k,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
+    
+    return(accuracy)
 
 
 # ====================================
@@ -455,6 +556,22 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
         for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
             multiargs.append((FILENAME,iter1,iter2,k,k))
         results.extend(pool.starmap(FUN, multiargs))
+
+    # MLEM2_RuleClusteringBySimExceptMRule_LERS 用
+    elif FUN == MLEM2_RuleClusteringBySimExceptMRule_LERS :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        #for k in k_range:
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k))
+        results.extend(pool.starmap(FUN, multiargs))
+    
+    # MLEM2_RuleClusteringByConsistentExceptMRule_LERS 用
+    elif FUN == MLEM2_RuleClusteringByConsistentExceptMRule_LERS :
+        k_range = kargs['k'] if 'k' in kargs else range(2,11)
+        #for k in k_range:
+        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k))
+        results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_LERS 用
     elif FUN == MLEM2_OnlyK_LERS :
@@ -510,9 +627,10 @@ if __name__ == "__main__":
 
     # set data and k
     FILENAMES = ['hayes-roth']
-    FILENAMES = ['german_credit_categorical']
+    #FILENAMES = ['german_credit_categorical']
+    k_range = range(2,11,1)
+    #k_range = range(2,20,2)    
     #k_range = range(3,30,3)
-    k_range = range(2,20,2)
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -527,15 +645,19 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySameCondition_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSim_LERS
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
-    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
+    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
+    #FUN = MLEM2_RuleClusteringBySimExceptMRule_LERS
+    #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_LERS
     
-    FUNS = [MLEM2_LERS,
-            MLEM2_OnlyK_LERS,
+    FUNS = [#MLEM2_LERS,
+            #MLEM2_OnlyK_LERS,
             #MLEM2_RuleClusteringBySim_LERS,
-            MLEM2_RuleClusteringByRandom_LERS,
-            MLEM2_RuleClusteringBySameCondition_LERS,
+            #MLEM2_RuleClusteringByRandom_LERS,
+            #MLEM2_RuleClusteringBySameCondition_LERS,
             #MLEM2_RuleClusteringByConsistentSim_LERS,
-            MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS]
+            #MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,
+            MLEM2_RuleClusteringBySimExceptMRule_LERS,
+            MLEM2_RuleClusteringByConsistentExceptMRule_LERS]
 
     # 並列実行
     proc=48

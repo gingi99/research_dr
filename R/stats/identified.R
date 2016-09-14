@@ -84,12 +84,16 @@ df %>%
          method == "Identify_MLEM2_SameCondition" |
          #method == "Identify_MLEM2_RuleClusteringByConsistentSim" |
          method == "Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule" |
-         method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule") %>%
-  mutate(method = factor(method, levels = c("Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule", 
+         method == "Identify_MLEM2_RuleClusteringByConsistentTimesSimExceptMRule" |
+         method == "Identify_MLEM2_RuleClusteringBySimExceptMRule" |
+         method == "Identify_MLEM2_RuleClusteringByConsistentExceptMRule") %>%
+  mutate(method = factor(method, levels = c("Identify_MLEM2_RuleClusteringByConsistentSimExceptMRule",
+                                            "Identify_MLEM2_RuleClusteringBySimExceptMRule",
+                                            "Identify_MLEM2_RuleClusteringByConsistentExceptMRule",
                                             "Identify_MLEM2_Random",
                                             "Identify_MLEM2_SameCondition",
                                             "Identify_MLEM2_OnlyK"),
-                         labels = c("Clustering", "Random", "Match", "Only K"))) %>%
+                         labels = c("Sim×Con", "Sim", "Con", "Random", "Match", "Only K"))) %>%
   mutate(k = paste0("k=",formatC(.$k, width=2, flag="0"))) %>%
   mutate(p = paste0("p=",p)) %>%
   group_by(filename, k, p, method) %>%

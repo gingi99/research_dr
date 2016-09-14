@@ -10,3 +10,4 @@ __pycache__/
 *.RData
 *.Rhistory
 .Rproj.user
+nohup.out

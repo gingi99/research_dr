@@ -154,33 +154,53 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0,
     nocls_freq_item_sets = model.freqItemsets().filter(lambda fis: all(not x in fis.items for x in classes))
     # クラスを含む頻出アイテム集合でかつ長さが2以上のものを取り出す
     cls_freq_item_sets = model.freqItemsets().filter(lambda fis: any(x in fis.items for x in classes)).filter(lambda fis: len(fis.items) > 1).collect()
-
-    #for cls in classes:
-        # クラスを含む頻出アイテム集合だけ取り出す
-        #cls_freq_item_sets = model.freqItemsets().filter(lambda fis: cls in fis.items)
-
     # クラスを含む頻出アイテム集合について繰り返し
     rules = []
-    for cls_freq_item in cls_freq_item_sets:
-
+    
+    #def getRule(cls_freq_item):
         # クラス以外の分が同じアイテムでかつ長さが1違いのアイテムを取り出す
-        nocls_freq_item = nocls_freq_item_sets.filter(lambda ifs : all(x in cls_freq_item.items for x in ifs.items)).filter(lambda fis: len(fis.items) == len(cls_freq_item.items) - 1).first()
+    #    cls_freq_item = cls_freq_item.first()
+    #    nocls_freq_item = nocls_freq_item_sets.filter(lambda ifs : all(x in cls_freq_item.items for x in ifs.items)).filter(lambda fis: len(fis.items) == len(cls_freq_item.items) - 1).first()
+        #print(cls_freq_item)
+        #print(nocls_freq_item) 
+    #    conf = float(cls_freq_item.freq) / float(nocls_freq_item.freq)
+    #    if conf >= min_conf:
+    #        rule = Rule()
+    #        rule.setValue(nocls_freq_item.items)
+    #        cls = list(set(cls_freq_item.items) & set(nocls_freq_item.items))[0]
+    #        rule.setConsequent(cls)
+    #        rule.setSupport(cls_freq_item.freq)
+    #        rule.setConf(conf)
+    #        return(rule)
+    #    else :
+    #        return(None)
+#
+    #rules = cls_freq_item_sets.foreach(getRule)
+
+    print("item count :"+str(len(cls_freq_item_sets)))
+    for cls_freq_item in cls_freq_item_sets:
+        
+        # クラス以外の分が同じアイテムでかつ長さが1違いのアイテムを取り出す
+    #    nocls_freq_item = nocls_freq_item_sets.filter(lambda ifs : all(x in cls_freq_item.items for x in ifs.items)).filter(lambda fis: len(fis.items) == len(cls_freq_item.items) - 1).first()
    
-        print(cls_freq_item)
-        print(nocls_freq_item) 
+        #print(cls_freq_item)
+    #    print(nocls_freq_item) 
         #for nocls_freq_item in nocls_freq_item_sets:
         #    # クラス以外の部分が同じアイテムでかつ長さが1違いのアイテムを取り出す
         #    cls_freq_item = cls_freq_item_sets.filter(lambda fis: (all(x in fis.items for x in nocls_freq_item.items))).filter(lambda fis: len(fis.items) == len(nocls_freq_item.items) + 1).collect()
         #    if cls_freq_item:
-        conf = float(cls_freq_item.freq) / float(nocls_freq_item.freq)
-        if conf >= min_conf:
-            rule = Rule()
-            rule.setValue(nocls_freq_item.items)
-            cls = list(set(cls_freq_item.items) & set(nocls_freq_item.items))[0]
-            rule.setConsequent(cls)
-            rule.setSupport(cls_freq_item.freq)
-            rule.setConf(conf)
-            rules.append(rule)
+    #    conf = float(cls_freq_item.freq) / float(nocls_freq_item.freq)
+    #    if conf >= min_conf:
+        values = [x for x in cls_freq_item.items if not x in classes]
+        cls = [x for x in cls_freq_item.items if x in classes][0]
+        conf = 0.0
+        rule = Rule()
+        rule.setValue(values)
+        #cls = list(set(cls_freq_item.items) & set(nocls_freq_item.items))[0]
+        rule.setConsequent(cls)
+        rule.setSupport(cls_freq_item.freq)
+        rule.setConf(conf)
+        rules.append(rule)
 
     return(rules)
 
@@ -298,7 +318,7 @@ if __name__ == "__main__":
     #"/data/uci/hayes-roth/alpha/hayes-roth-train2-10.txt"
     FILENAME = "hayes-roth" 
     #FILENAME = "nursery" 
-    #FILENAME = "german_credit_categorical" 
+    FILENAME = "german_credit_categorical" 
 
     # データのインデックス
     iter1 = 6 
@@ -307,12 +327,12 @@ if __name__ == "__main__":
     # クラスの数を設定
     classes = ['D1', 'D2', 'D3']
     #classes = ['D1', 'D2', 'D3', 'D4', 'D5']
-    #classes = ['D1', 'D2']
+    classes = ['D1', 'D2']
 
     # support と confidence の閾値
     min_sup = 2
-    #min_sup_range = range(3,11,1)
-    min_sup_range = range(3,30,3)
+    min_sup_range = range(10,100,10)
+    #min_sup_range = range(3,30,3)
     min_conf = 1.0
 
     # ファイルを保存する場所

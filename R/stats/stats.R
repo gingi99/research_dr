@@ -16,10 +16,10 @@ library(rlist)
 # データ読み込み
 # ===========================================
 
-FILENAME <- "hayes-roth"
-FILENAME <- "nursery"
 FILENAME <- "adult_cleansing2"
 FILENAME <- "german_credit_categorical"
+FILENAME <- "hayes-roth"
+FILENAME <- "nursery"
 DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.target <- files.all[str_detect(files.all, "LERS")]
@@ -54,7 +54,9 @@ df %>%
          method == "MLEM2_RuleClusteringBySameCondition_LERS" |
          method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
          method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
-         method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS") %>%
+         method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   ggplot(aes(x=k, y=acc, color=method)) +
@@ -71,7 +73,9 @@ df %>%
            method == "MLEM2_RuleClusteringBySameCondition_LERS" |
            method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
            method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
-           method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS") %>%
+           method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
+           method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
+           method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   group_by(filename, k, method) %>%
@@ -106,6 +110,8 @@ df %>%
 df %>%
   filter(#method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
          method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS" |
          method == "MLEM2_RuleClusteringByRandom_LERS" |
          method == "MLEM2_RuleClusteringBySameCondition_LERS" |
          method == "MLEM2_OnlyK_LERS") %>%
@@ -114,11 +120,15 @@ df %>%
   mutate(method = factor(.$method, 
                         levels = c(#"MLEM2_RuleClusteringByConsistentSim_LERS",
                                    "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS",
+                                   "MLEM2_RuleClusteringBySimExceptMRule_LERS",
+                                   "MLEM2_RuleClusteringByConsistentExceptMRule_LERS",
                                    "MLEM2_RuleClusteringByRandom_LERS",
                                    "MLEM2_RuleClusteringBySameCondition_LERS",
                                    "MLEM2_OnlyK_LERS"),
                         labels = c(#"提案法1",
                                    "提案法2",
+                                   "Sim",
+                                   "Consistent",
                                    "Random",
                                    "Same Condition",
                                    "Only K Rules"))) %>%
@@ -142,19 +152,25 @@ df %>%
 df %>%
   filter(#method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
     method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
-      method == "MLEM2_RuleClusteringByRandom_LERS" |
-      method == "MLEM2_RuleClusteringBySameCondition_LERS" |
-      method == "MLEM2_OnlyK_LERS") %>%
+    method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
+    method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS" |
+    method == "MLEM2_RuleClusteringByRandom_LERS" |
+    method == "MLEM2_RuleClusteringBySameCondition_LERS" |
+    method == "MLEM2_OnlyK_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = paste0("k=",as.character(k))) %>%
   mutate(method = factor(.$method, 
                          levels = c(#"MLEM2_RuleClusteringByConsistentSim_LERS",
                            "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS",
+                           "MLEM2_RuleClusteringBySimExceptMRule_LERS",
+                           "MLEM2_RuleClusteringByConsistentExceptMRule_LERS",
                            "MLEM2_RuleClusteringByRandom_LERS",
                            "MLEM2_RuleClusteringBySameCondition_LERS",
                            "MLEM2_OnlyK_LERS"),
                          labels = c(#"提案法1",
-                           "Clustering",
+                           "Sim $times$ Con",
+                           "Sim",
+                           "Con",
                            "Random",
                            "Match",
                            "Only $k$"))) %>%

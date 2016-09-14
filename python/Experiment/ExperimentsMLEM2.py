@@ -23,7 +23,7 @@ importlib.reload(clustering)
 DIR_UCI = '/mnt/data/uci'
 
 # ====================================
-# Rules の　N Supportを満たす割合
+# Rules の N Supportを満たす割合
 # ====================================
 def MLEM2_PerN(FILENAME, n) :
 
@@ -291,7 +291,6 @@ def MLEM2_RuleClusteringBySimExceptMRule_LERS(FILENAME, iter1, iter2, k, m) :
     filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table, list_nominal)
-
 
     fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules_cluster_sim_except_mrule/'+'rules-'+str(k)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
     rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else clustering.getRuleClusteringBySimilarityExceptMRule(rules, colnames, list_judgeNominal, k=k, m=m)
@@ -626,9 +625,12 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['hayes-roth']
+    FILENAMES = ['adult_cleansing2']
+    #FILENAMES = ['hayes-roth']
     #FILENAMES = ['german_credit_categorical']
-    k_range = range(2,11,1)
+    #FILENAMES = ['nursery']
+    k_range = range(5,50,5)
+    #k_range = range(2,11,1)
     #k_range = range(2,20,2)    
     #k_range = range(3,30,3)
     
@@ -663,8 +665,8 @@ if __name__ == "__main__":
     proc=48
     freeze_support()
     
-    #for FUN in FUNS :
-    results = multi_main(proc, FILENAMES, FUN, k = k_range)
+    for FUN in FUNS :
+        results = multi_main(proc, FILENAMES, FUN, k = k_range)
     # 平均と分散
     print(getEvalMeanVar(results))
     

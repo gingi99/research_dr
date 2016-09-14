@@ -93,7 +93,7 @@ df %>%
   mutate(k = paste0("k=",formatC(.$k, width=2, flag="0"))) %>%
   mutate(p = paste0("p=",p)) %>%
   group_by(filename, k, p, method) %>%
-  summarise(mean_identify = mean(identify,na.rm=T), 
+  dplyr::summarise(mean_identify = mean(identify,na.rm=T), 
             sd_identify = sd(identify,na.rm=T)) %>% 
   ggplot(aes(x=k, y=mean_identify, group = method, linetype=method,shape=method)) +
     geom_line() +
@@ -115,8 +115,8 @@ df %>%
     theme(axis.title.x = element_text(size=15)) +
     theme(axis.text.x = element_text(size=10, angle = 45, hjust = 1)) +
     theme(axis.title.y = element_text(size=15)) +
-    theme(axis.text.y = element_text(size=10)) +
-    theme(legend.position = "bottom")
+    theme(axis.text.y = element_text(size=10))
+    #theme(legend.position = "bottom")
     #theme(legend.position = c(0.1, 0.9))
 
 # ===========================================

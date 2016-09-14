@@ -325,26 +325,27 @@ if __name__ == "__main__":
     #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
     # 実行したい実験関数
-    FUN = MLEM2_Identified
+    #FUN = MLEM2_Identified
     #FUN = MLEM2_OnlyK_Identified
     #FUN = MLEM2_RuleClusteringByRandom_Identified
     #FUN = MLEM2_RuleClusteringBySameCondition_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSim_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified
-    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
+    FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
 
-    #FUNS = [MLEM2_Identified,
-    #        MLEM2_OnlyK_Identified,
-    #        MLEM2_RuleClusteringByRandom_Identified,
-    #        MLEM2_RuleClusteringBySameCondition_Identified,
-    #        MLEM2_RuleClusteringByConsistentSim_Identified,
-    #        MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified]
+    FUNS = [MLEM2_Identified,
+            MLEM2_OnlyK_Identified,
+            MLEM2_RuleClusteringByRandom_Identified,
+            MLEM2_RuleClusteringBySameCondition_Identified,
+            #MLEM2_RuleClusteringByConsistentSim_Identified,
+            MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified]
 
     # 並列実行
-    proc=4
+    proc=48
     freeze_support()
     
     #for FUN in FUNS :
     results = multi_main(proc, FILENAMES, FUN, k = k_range)
+
     # 平均と分散
     print(getEvalMeanVar(results))  

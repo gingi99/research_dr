@@ -1,6 +1,7 @@
 # coding: utf-8
-# python 2.7
+# python 3.5
 import Orange
+from orangecontrib.associate.fpgrowth import *
 import pandas as pd
 import numpy as np
 import sys
@@ -158,7 +159,7 @@ def predictByLERS(FILENAME, iter1, iter2, rules) :
 # =====================================
 # Main 関数
 # =====================================
-def getRulesByApriori(FILENAME, classes, iter1, iter2, minsup, minconf) :
+def getRulesByFPGrowth(FILENAME, classes, iter1, iter2, minsup, minconf) :
     
     # read data
     filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.txt'
@@ -167,29 +168,47 @@ def getRulesByApriori(FILENAME, classes, iter1, iter2, minsup, minconf) :
     filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.basket'
     data_table = Orange.data.Table(filepath)
     #print len(data_table)
-
+   
     # set parameter
     num_lines = sum(1 for line in open(filepath))
     minsup = float(minsup) / float(num_lines)
-    #print minsup
+    #
+    #itemsets = frequent_itemsets(data_table, minsup)
+    #print(itemsets)
+    #print(list(itemsets))
+
+    X, mapping = OneHot.encode(data_table, include_class=True)
+    #print(X)
+  
+    itemsets = dict(frequent_itemsets(X, minsup))
+    #print(itemsets)
+    #print(len(itemsets))
+    
+    rules = [(P, Q, supp, conf) for P, Q, supp, conf in association_rules(itemsets, minconf) if len(Q) == 1]
+    #print(rules)
+
+    names = {item: '{}={}'.format(var.name, val) for item, var, val in OneHot.decode(mapping, data_table, mapping)}
+
+    for ante, cons, supp, conf in rules:
+        print(', '.join(names[i] for i in ante), '-->', names[next(iter(cons))], '(supp: {}, conf: {})'.format(supp, conf))
 
     # induce rules
     #rules_orange = Orange.associate.AssociationRulesSparseInducer(data_table, support=minsup, confidence=minconf)
-    rules_orange = Orange.associate.AssociationRulesSparseInducer(data_table, support = minsup, max_item_sets = 2000)
+    #rules_orange = Orange.associate.AssociationRulesSparseInducer(data_table, support = minsup, max_item_sets = 2000)
 
     # convert Rule Class
-    rules = []
-    for rule_orange in rules_orange :
-        consequent = rule_orange.right.get_metas(str).keys()
-        if len(consequent) == 1 and consequent[0] in classes and rule_orange.confidence >= minconf :
-            rule = Rule()
-            rule.setValue(rule_orange.left.get_metas(str).keys())
-            rule.setConsequent(consequent[0])
-            rule.setSupport(rule_orange.support)
-            rule.setConf(rule_orange.confidence)
-            rules.append(rule)
+    #rules = []
+    #for rule_orange in rules_orange :
+    #    consequent = rule_orange.right.get_metas(str).keys()
+    #    if len(consequent) == 1 and consequent[0] in classes and rule_orange.confidence >= minconf :
+    #        rule = Rule()
+    #        rule.setValue(rule_orange.left.get_metas(str).keys())
+    #        rule.setConsequent(consequent[0])
+    #        rule.setSupport(rule_orange.support)
+    #        rule.setConf(rule_orange.confidence)
+    #        rules.append(rule)
     # END
-    return(rules)
+    #return(rules)
 
 # ======================================================
 # Apriori_LERS
@@ -249,24 +268,24 @@ def multi_main(proc, FILENAME, FUN, **kargs):
 # ========================================
 if __name__ == "__main__":
 
-    #FILENAME = 'hayes-roth'
+    FILENAME = 'hayes-roth'
     FILENAME = 'german_credit_categorical'
 
     # number of class
-    #classes = ['D1', 'D2', 'D3']
+    classes = ['D1', 'D2', 'D3']
     classes = ['D1', 'D2',]
 
-    #iter1 = 10
-    #iter2 = 3
+    iter1 = 10
+    iter2 = 3
 
     # support と confidence の閾値
-    min_sup_range = range(2,11,1)
-    min_sup_range = range(2,20,2)
-    #min_sup = 1
+    #min_sup_range = range(2,11,1)
+    #min_sup_range = range(2,20,2)
+    min_sup = 100
     min_conf = 1.0
 
     # rule induction
-    #rules = getRulesByApriori(FILENAME, classes, iter1, iter2, min_sup, min_conf)
+    getRulesByFPGrowth(FILENAME, classes, iter1, iter2, min_sup, min_conf)
 
     #print len(rules)
     #for r in rules:
@@ -276,7 +295,7 @@ if __name__ == "__main__":
     #print(predictByLERS(FILENAME, iter1, iter2, rules))
 
     # 並列実行して全データで評価
-    proc=32
-    freeze_support()
-    FUN = Apriori_LERS
-    results = multi_main(proc, FILENAME, FUN, classes = classes, min_sup = min_sup_range, min_conf = min_conf)
+    #proc=32
+    #freeze_support()
+    #FUN = Apriori_LERS
+    #results = multi_main(proc, FILENAME, FUN, classes = classes, min_sup = min_sup_range, min_conf = min_conf)

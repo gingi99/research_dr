@@ -6,6 +6,7 @@ import pprint
 import json
 import pickle
 import sys
+import copy
 from itertools import chain
 from itertools import combinations
 from itertools import product
@@ -104,6 +105,8 @@ class Rule2 :
        else : return(self.consequent)
    def getSupport(self) :
        return(sorted(self.support))
+   def delKey(self, key) :
+       self.value.pop(key, None)
    def output(self) :
        print("value:" + str(self.value))
        print("consequent:" + str(self.consequent))
@@ -201,6 +204,21 @@ def getPerNSupport(list_rules, n) :
     n_rules = [r for r in list_rules if len(r.getSupport()) == n]
     ans = len(n_rules) / len(list_rules)
     return(ans)
+
+# =====================================
+# Rules のうち 基本条件 e(属性attrの値v) を含むルールセットを返す
+# =====================================    
+def getRulesIncludeE(list_rules, attr, v) :
+    rules = [r for r in list_rules if r.getValue(attr) == v]
+    return(rules)
+    
+# =====================================
+# Rule の 基本条件 e(属性attrの値v) を削除したルールを返す
+# =====================================    
+def delEfromRule(rule, attr) :
+    rule_new = copy.deepcopy(rule)
+    rule_new.delKey(attr)
+    return(rule_new)
 
 # =====================================
 # Rules のうち、P個の属性値が分かれば、クラスを推定できるか
@@ -640,4 +658,3 @@ if __name__ == "__main__":
     iter2 = 1
     
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)
-

@@ -5,11 +5,13 @@ from itertools import chain
 from itertools import combinations
 from sklearn.metrics import accuracy_score
 import pandas as pd
-import sys
-import os
+#import sys
+#import os
 #sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
 #sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
+import importlib
 import mlem2
+importlib.reload(mlem2)  
 
 # =====================================
 # list a が b に包含されているかを判定する
@@ -17,12 +19,11 @@ import mlem2
 def isSuperList(list_a, list_b) :
     return(set(list_b).issuperset(set(list_a)))
 
-
 # ====================================
 # Ruleの1つの条件部が対象を説明するかどうか
 # ====================================
 def isExplainNominalCondition(obj, rule, attr):
-    if isSuperList(obj[attr], rule.getValue(attr)):
+    if isSuperList(str(obj[attr]), rule.getValue(attr)):
         return(True)
     else :
         return(False)
@@ -44,7 +45,8 @@ def isExplainRule(obj, rule, list_judgeNominal) :
     for attr in attributes :
         # nominal なら
         if list_judgeNominal[attr] :
-            isExplain = isExplainNominalCondition(obj, rule, attr)  
+            isExplain = isExplainNominalCondition(obj, rule, attr)
+            print(isExplain)
         # numerical なら
         else :
             isExplain = isExplainNumericalCondition(obj, rule, attr)  
@@ -129,7 +131,7 @@ def predictByLERS(rules, decision_table_test, list_judgeNominal) :
 if __name__ == "__main__":
 
     FILENAME = 'german_credit_categorical'    
-    FILENAME = 'hayes-roth'
+    #FILENAME = 'hayes-roth'
     iter1 = 1
     iter2 = 1
     
@@ -167,3 +169,13 @@ if __name__ == "__main__":
     for c in combi :
         print(list(c))
     
+    # 公正配慮
+    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "2.0")
+    rules_sex_4 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "4.0")
+    
+    # 公正配慮して条件を1つ削除する例
+    rule = mlem2.delEfromRule(rules[12],'No_of_dependents')
+    
+    # ルールを満たすやつ ほとんどないな。。
+    match_objects = decision_table_test.apply(lambda obj: isExplainRule(obj, rules[12], list_judgeNominal), axis=1)    
+        

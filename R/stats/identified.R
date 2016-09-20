@@ -77,6 +77,13 @@ df %>%
     theme(legend.position = "bottom")
 
 # identify の 平均線
+tmp.df <- data.frame(filename = c("adult","adult","adult","adult","adult","adult"),
+                     k = c("k=45","k=45","k=45","k=45","k=45","k=45"),
+                     p = c("p=1","p=2","p=3","p=1","p=2","p=3"),
+                     method = c("Sim","Sim","Sim","Con","Con","Con"),
+                     mean_identify = c(0.047, 0.318, 0.660, 0.112, 0.795,0.988)
+          )
+
 df %>%
   filter(#method == "Identify_MLEM2" | 
          method == "Identify_MLEM2_OnlyK" | 
@@ -97,8 +104,9 @@ df %>%
   mutate(k = paste0("k=",formatC(.$k, width=2, flag="0"))) %>%
   mutate(p = paste0("p=",p)) %>%
   group_by(filename, k, p, method) %>%
-  dplyr::summarise(mean_identify = mean(identify,na.rm=T), 
-            sd_identify = sd(identify,na.rm=T)) %>% 
+  dplyr::summarise(mean_identify = mean(identify,na.rm=T)) %>% 
+  dplyr::bind_rows(tmp.df) %>%
+  dplyr::mutate(method = factor(method, levels = c("Sim×Con", "Sim", "Con", "Random", "Match", "Only K"))) %>%
   ggplot(aes(x=k, y=mean_identify, group = method, linetype=method,shape=method)) +
     geom_line() +
     geom_point(size=3) +

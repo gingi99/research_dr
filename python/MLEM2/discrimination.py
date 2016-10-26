@@ -1,0 +1,110 @@
+# coding: utf-8
+# python 3.5
+#import sys
+#import os
+#sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
+#sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
+from sklearn.metrics import accuracy_score
+import importlib
+import mlem2
+import LERS
+importlib.reload(mlem2)  
+importlib.reload(LERS)  
+    
+# =====================================
+# 公正配慮すべき属性list_sをdecision_tableから削除する
+# =====================================
+def delDiscriminativeAttributes(decision_table, list_s):
+    return(decision_table.drop(list_s, axis=1))
+
+# =====================================
+# Rule の 配慮変数s での decision_tableにおける　elift
+# =====================================
+def getElift(rule, s, decision_table, list_judgeNominal):
+    conf = LERS.getConfidence(rule, decision_table, list_judgeNominal)
+    rule_s = mlem2.delEfromRule(rule,s)
+    conf_s = LERS.getConfidence(rule_s, decision_table)
+    elift = conf / conf_s
+    return(elift)
+    
+# =====================================
+# Rule の 配慮変数s での decision_tableにおける　slift
+# =====================================
+def getSlift(rule, s, decision_table, operator):
+    conditions = mlem2.getConditionValues(decision_table, s)
+    clifts = [getClift(rule, s, c, decision_table) for c in conditions]
+    slift = operator(clifts)
+    return(slift)
+
+# =====================================
+# Rule の 配慮変数s と 代替する変数c での decision_tableにおける　clift
+# =====================================
+def getClift(rule, s, c, decision_table, list_judgeNominal):
+    conf = LERS.getConfidence(rule, decision_table,list_judgeNominal)
+    rule_c = mlem2.delEfromRule(rule,s)
+    rule_c = rule_c.setValue(s,c)
+    conf_c = LERS.getConfidence(rule_c, decision_table, list_judgeNominal)
+    clift = conf / conf_c
+    return(clift)
+
+# ========================================
+# main
+# ========================================
+if __name__ == "__main__":
+
+    # 設定
+    DIR_UCI = '/mnt/data/uci/'
+    FILENAME = 'german_credit_categorical'    
+    iter1 = 1
+    iter2 = 1
+    
+    # rule induction
+    rules = mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+
+    # test data
+    filepath = DIR_UCI+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table_test = mlem2.getDecisionTable(filepath)
+    decision_table_test = decision_table_test.dropna()
+    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+
+    # nominal data
+    filepath = DIR_UCI+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+    
+    # 正答率を求める
+    accuracy_score(decision_class, predictions)    
+    
+    # 公正配慮
+    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "2.0")
+    rules_sex_4 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "4.0")
+    
+    # 公正配慮して条件を1つ削除する例
+    rule = mlem2.delEfromRule(rules[12],'No_of_dependents')
+    rule = mlem2.delEfromRule(rules[12],'Concurrent_Credits')
+
+    
+    # ====
+        
+    # read data
+    filepath = '/mnt/data/uci/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
+    decision_table = mlem2.getDecisionTable(filepath)
+    decision_table = decision_table.dropna()
+    decision_table.index = range(decision_table.shape[0])
+
+    # read nominal
+    filepath = '/mnt/data/uci/'+'/'+FILENAME+'/'+FILENAME+'.nominal'
+    list_nominal = mlem2.getNominalList(filepath)
+    
+    # ルールを満たすやつ ほとんどないな。。
+    match_objects = decision_table.apply(lambda obj: isExplainRule(obj, rules[12], list_judgeNominal), axis=1)    
+
+    # confidence
+    getConfidence(rule, decision_table, list_judgeNominal)
+    
+    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status","2.0")
+
+    

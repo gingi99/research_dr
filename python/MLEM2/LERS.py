@@ -46,7 +46,6 @@ def isExplainRule(obj, rule, list_judgeNominal) :
         # nominal なら
         if list_judgeNominal[attr] :
             isExplain = isExplainNominalCondition(obj, rule, attr)
-            print(isExplain)
         # numerical なら
         else :
             isExplain = isExplainNumericalCondition(obj, rule, attr)  
@@ -54,7 +53,7 @@ def isExplainRule(obj, rule, list_judgeNominal) :
         if not isExplain :
             return(False)
     return(True)
-
+    
 # ====================================
 # Ruleが対象の条件にマッチする割合(matching_factor)
 # ====================================
@@ -74,6 +73,22 @@ def getMatchingFactor(obj, rule, list_judgeNominal) :
     matching_factor = matching_factor / len(attributes)      
     return(matching_factor)
 
+# ====================================
+# Rule の　Confidence を求める
+# ====================================
+def getConfidence(rule, decision_table, list_judgeNominal) :
+    # ruleの条件部にマッチするobjをTRUEで返す
+    match_objects = decision_table.apply(lambda obj: isExplainRule(obj, rule, list_judgeNominal), axis=1)    
+    if any(match_objects) :  
+        bunbo = sum(match_objects)
+        consequent_name = decision_table.columns[-1]
+        match_consequents = decision_table[consequent_name].ix[match_objects] == rule.getConsequent()
+        bunshi = sum(match_consequents)
+        conf = bunshi / bunbo
+        return(conf)
+    # なければNoneで    
+    else :
+        return(None)
 
 # ====================================
 # rulesからsupportDを求める
@@ -153,29 +168,3 @@ if __name__ == "__main__":
     # 正答率を求める
     accuracy_score(decision_class, predictions)    
     
-    # memo
-    filepath = '/mnt/data/uci/'+FILENAME+'/alpha/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.txt'
-    decision_table_test = pd.read_csv(filepath, delimiter=' ', header=None)
-    decision_table_test = decision_table_test.dropna()
-    decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
-
-    decision_table_test = decision_table_test.drop(decision_table_test.columns[len(decision_table_test.columns)-1], axis=1)
-    decision_table_test2 = decision_table_test.values.tolist()
-
-    couho = list(chain.from_iterable(decision_table_test2))
-    couho = list(set(couho))
-    p = 2
-    combi = combinations(couho,p)
-    for c in combi :
-        print(list(c))
-    
-    # 公正配慮
-    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "2.0")
-    rules_sex_4 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "4.0")
-    
-    # 公正配慮して条件を1つ削除する例
-    rule = mlem2.delEfromRule(rules[12],'No_of_dependents')
-    
-    # ルールを満たすやつ ほとんどないな。。
-    match_objects = decision_table_test.apply(lambda obj: isExplainRule(obj, rules[12], list_judgeNominal), axis=1)    
-        

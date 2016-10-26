@@ -408,6 +408,13 @@ def getDescriptors(decision_table) :
 #print list_descriptors
 
 # =========================================
+# ある条件属性 condition の取りうる条件属性値の集合を返す
+# =========================================
+def getConditionValues(decision_table, condition) :
+    list_values = list(pd.Series(decision_table[condition]).unique())
+    return(list_values)
+
+# =========================================
 # cutpoint型の各条件属性の取りうる条件属性値候補集合をリスト構造で返す
 # =========================================
 def getAttributeValueParis(decision_table, list_nominal) :
@@ -517,7 +524,7 @@ def isSuperList(list_a, list_b) :
 # =====================================
 def getRulesByMLEM2(FILENAME, iter1, iter2) :
     
-    print(str(iter1),str(iter2))    
+    print(str(iter1),str(iter2))
     
     # read data
     filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'

@@ -22,28 +22,42 @@ importlib.reload(clustering)
 DIR_UCI = '/mnt/data/uci'
 
 # ====================================
-# 配慮変数削除　- MLEM2 - LERS による正答率実験
+# test data を返す
 # ====================================
-def MLEM2_LERS(FILENAME, iter1, iter2) :
-    
-    # FileNAM
-
-    # rule induction
-    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
-    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
-
-    # rule save
-    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
-
-    # test data setup
+def getTestData(FILENAME, iter1, iter2) :
     filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-test'+str(iter1)+'-'+str(iter2)+'.tsv'
     decision_table_test = mlem2.getDecisionTable(filepath)
     decision_table_test = decision_table_test.dropna()
     decision_class = decision_table_test[decision_table_test.columns[-1]].values.tolist()
+    return(decision_table_test, decision_class)
 
+# ====================================
+# list_judgeNominal を返す
+# ====================================
+def getJudgeNominal(decision_table_test, filepath) :
     filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
     list_nominal = mlem2.getNominalList(filepath)
     list_judgeNominal = mlem2.getJudgeNominal(decision_table_test, list_nominal)
+    return(list_judgeNominal)
+
+# ====================================
+# 配慮変数削除　- MLEM2 - LERS による正答率実験
+# ====================================
+def MLEM2_DELRule_LERS(FILENAME, iter1, iter2) :
+    
+    # rule induction and rule save
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
+
+    # test data setup
+    decision_table_test, decision_class = getTestData(FILENAME, iter1, iter2)
+    
+    # get nominal
+    list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
+
+    # 
+    rules = del
 
     # predict by LERS
     predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)

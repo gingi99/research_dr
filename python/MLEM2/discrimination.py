@@ -78,14 +78,25 @@ if __name__ == "__main__":
     # 正答率を求める
     accuracy_score(decision_class, predictions)    
     
-    # 公正配慮
-    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "2.0")
-    rules_sex_4 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "4.0")
+    ###### 公正配慮のテスト    
     
-    # 公正配慮して条件を1つ削除する例
-    rule = mlem2.delEfromRule(rules[12],'No_of_dependents')
-    rule = mlem2.delEfromRule(rules[12],'Concurrent_Credits')
+    # 基本条件を含むルールセット
+    rules_sex_2 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "2.0")
+    rules_sex_4 = mlem2.getRulesIncludeE(rules, "Sex_Marital_Status", "4.0")    
+    # 条件を含まないルールセット    
+    rules_exclude_sex = mlem2.getRulesExcludeAttr(rules, "Sex_Marital_Status")
+    # 基本条件を含まないルールセット    
+    rules_exclude_sex_1 = mlem2.getRulesExcludeE(rules, "Sex_Marital_Status", "1.0")
+    # 条件を削除したルールセット
+    rules_del_value = mlem2.getRulesDelAttr(rules, "Value_Savings_Stocks")    
+    # 基本条件を削除したルールセット
+    rules_del_value_1 = mlem2.getRulesDelE(rules, "Value_Savings_Stocks", "1.0")    
+    
+    # 条件を1つ削除する例
+    rule = mlem2.delAttrFromRule(rules[12],'No_of_dependents')
+    rule = mlem2.delAttrFromRule(rules[12],'Concurrent_Credits')
 
+ 
     
     # ====
         

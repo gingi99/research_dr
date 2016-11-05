@@ -15,6 +15,10 @@ importlib.reload(mlem2)
 # list a が b に包含されているかを判定する
 # =====================================
 def isSuperList(list_a, list_b) :
+    if type(list_a) != list : # バグを修正。rule2型のgetvalueだとonecase=Fがいるため
+        list_a = [list_a]
+    if type(list_b) != list : # バグを修正。rule2型のgetvalueだとonecase=Fがいるため
+        list_b = [list_b]
     return(set(list_b).issuperset(set(list_a)))
 
 # ====================================

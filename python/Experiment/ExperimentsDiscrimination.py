@@ -2,7 +2,6 @@
 # python 3.5
 from itertools import product
 from sklearn.metrics import accuracy_score
-import numpy as np
 import joblib
 import sys
 import os
@@ -17,6 +16,8 @@ import LERS
 importlib.reload(LERS) 
 import clustering
 importlib.reload(clustering) 
+import discrimination
+importlib.reload(discrimination) 
 
 # Grobal setting
 DIR_UCI = '/mnt/data/uci'
@@ -41,9 +42,9 @@ def getJudgeNominal(decision_table_test, filepath) :
     return(list_judgeNominal)
 
 # ====================================
-# 配慮変数削除　- MLEM2 - LERS による正答率実験
+# MLEM2 - 配慮変数の属性削除 - LERS による正答率実験
 # ====================================
-def MLEM2_DELRule_LERS(FILENAME, iter1, iter2) :
+def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
     
     # rule induction and rule save
     fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
@@ -56,8 +57,9 @@ def MLEM2_DELRule_LERS(FILENAME, iter1, iter2) :
     # get nominal
     list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
 
-    # 
-    rules = del
+    # 属性削除
+    for attr in ATTRIBUTES:
+        rules = DELFUN(rules, attr)
 
     # predict by LERS
     predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
@@ -66,27 +68,33 @@ def MLEM2_DELRule_LERS(FILENAME, iter1, iter2) :
     accuracy = accuracy_score(decision_class, predictions)
 
     # ファイルにsave
-    #savepath = DIR_UCI+'/'+FILENAME+'/MLEM2_LERS.csv'
-    #with open(savepath, "a") as f :
-    #    f.writelines('MLEM2_LERS,1,{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
+    savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delAttrRule_LERS.csv'
+    with open(savepath, "a") as f :
+        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy)+"\n")
 
-    return(accuracy)
+    return(0)
 
 # ========================================
 # multi に実行する
 # ========================================
 def multi_main(n_jobs, FILENAME, FUN, **kargs):
-    results = joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2) for (iter1,iter2) in product(range(1,11), range(1,11)))
-    return(results)
+    if FUN == MLEM2_delAttrRule_LERS :
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs['ATTRIBUTES']))
+    else :
+        pass
+    return(0)
 
 # ========================================
 # main
 # ========================================
 if __name__ == "__main__":
 
-    # set data
+    # set data and protected attributes
     FILENAME = 'adult_cleansing2'
     FILENAME = 'german_credit_categorical'
+    ATTRIBUTES = []
+    ATTRIBUTES = [["Foreign_Worker"],["Age_years", "Foreign_Worker", "Sex_Marital_Status"]]    
+    DELFUNS = [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr]
     
     # シングルプロセスで実行
     #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
@@ -105,17 +113,12 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySimExceptMRule_LERS
     #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_LERS
     
-    FUNS = [MLEM2_LERS
+    FUNS = [MLEM2_delAttrRule_LERS
     ]
 
     # 並列実行
     n_jobs = 4
     for FUN in FUNS :
-        results = multi_main(n_jobs, FILENAME, FUN) 
+        multi_main(n_jobs, FILENAME, FUN, 
+                   DELFUNS = DELFUNS, ATTRIBUTES = ATTRIBUTES) 
     
-    # 平均と分散
-    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(results),3)), std=('%.3f' % round(np.std(results),3)))
-    print(ans)
-    
-    # 保存する
-    #saveResults(results, "/data/uci/hayes-roth/accuracy.txt")

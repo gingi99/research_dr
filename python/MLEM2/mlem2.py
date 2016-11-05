@@ -206,21 +206,6 @@ def getPerNSupport(list_rules, n) :
     return(ans)
 
 # =====================================
-# Rules のうち 基本条件 e(属性attrの値v) を含むルールセットを返す
-# =====================================    
-def getRulesIncludeE(list_rules, attr, v) :
-    rules = [r for r in list_rules if r.getValue(attr) == v]
-    return(rules)
-    
-# =====================================
-# Rule の 基本条件 e(属性attrの値v) を削除したルールを返す
-# =====================================    
-def delEfromRule(rule, attr) :
-    rule_new = copy.deepcopy(rule)
-    rule_new.delKey(attr)
-    return(rule_new)
-
-# =====================================
 # Rules のうち、P個の属性値が分かれば、クラスを推定できるか
 # =====================================
 def getPerIdentifiedClass(rules, p) :         

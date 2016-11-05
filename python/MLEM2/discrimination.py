@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 import importlib
 import mlem2
 import LERS
+import copy
 importlib.reload(mlem2)  
 importlib.reload(LERS)  
     
@@ -16,6 +17,48 @@ importlib.reload(LERS)
 # =====================================
 def delDiscriminativeAttributes(decision_table, list_s):
     return(decision_table.drop(list_s, axis=1))
+
+# =====================================
+# Rules のうち 基本条件 e(属性attrの値v) を含むルールセットを返す
+# =====================================    
+def getRulesIncludeE(list_rules, attr, v) :
+    rules = [r for r in list_rules if r.getValue(attr) == v]
+    return(rules)
+    
+# =====================================
+# Rules のうち 属性attr / 基本条件e を 含まないルールセットを返す
+# =====================================    
+def getRulesExcludeAttr(list_rules, attr) :
+    rules = [r for r in list_rules if not attr in r.getKey()]
+    return(rules)
+ 
+def getRulesExcludeE(list_rules, attr, v) :
+    rules = [r for r in list_rules if r.getValue(attr) != v]
+    return(rules)
+
+# =====================================
+# Rules のうち 属性attr / 基本条件e を 削除したルールセットを返す
+# =====================================
+def getRulesDelAttr(list_rules, attr) :
+    rules = [delAttrFromRule(r, attr) for r in list_rules]
+    return(rules)
+    
+def getRulesDelE(list_rules, attr, v) :
+    rules = [delEFromRule(r, attr, v) for r in list_rules]
+    return(rules)
+   
+# =====================================
+# Rule の 属性attr / 基本条件　e を削除したルールを返す
+# =====================================    
+def delAttrFromRule(rule, attr) :
+    rule_new = copy.deepcopy(rule)
+    rule_new.delKey(attr)
+    return(rule_new)
+
+def delEFromRule(rule, attr, v) :
+    if rule.getValue(attr) == v : return(delAttrFromRule(rule, attr))
+    else : return(rule)
+    
 
 # =====================================
 # Rule の 配慮変数s での decision_tableにおける　elift

@@ -161,9 +161,12 @@ def loadPickleRules(fullpath_filename) :
 # =====================================
 # Rules の Supportの平均数
 # =====================================
-def getMeanSupport(list_rules) :
+def getMeanSupport(list_rules, only_avg = True) :
     supports = [len(r.getSupport()) for r in list_rules]
-    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(supports),3)), std=('%.3f' % round(np.std(supports),3)))
+    if only_avg :
+        ans = np.mean(supports)
+    else :
+        ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(supports),3)), std=('%.3f' % round(np.std(supports),3)))
     return(ans)
 
 # =====================================
@@ -177,9 +180,12 @@ def getMinSupport(list_rules) :
 # =====================================
 # Rules の Ruleの長さの平均数
 # =====================================
-def getMeanLength(list_rules) :
+def getMeanLength(list_rules, only_avg = True) :
     lengths = [len(r.getKey()) for r in list_rules]
-    ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(lengths),3)), std=('%.3f' % round(np.std(lengths),3)))
+    if only_avg :
+        ans = np.mean(lengths)
+    else :
+        ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(lengths),3)), std=('%.3f' % round(np.std(lengths),3)))
     return(ans)
 
 # =====================================

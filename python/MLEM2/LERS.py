@@ -1,10 +1,8 @@
 # coding: utf-8
 # python 3.5
+import numpy as np
 from itertools import compress
-from itertools import chain
-from itertools import combinations
 from sklearn.metrics import accuracy_score
-import pandas as pd
 #import sys
 #import os
 #sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
@@ -74,21 +72,25 @@ def getMatchingFactor(obj, rule, list_judgeNominal) :
     return(matching_factor)
 
 # ====================================
-# Rule の　Confidence を求める
+# Rule の　decision_tableに対するSupport と　Confidence を求める
 # ====================================
-def getConfidence(rule, decision_table, list_judgeNominal) :
+def getSupportConfidence(rule, decision_table, list_judgeNominal) :
     # ruleの条件部にマッチするobjをTRUEで返す
     match_objects = decision_table.apply(lambda obj: isExplainRule(obj, rule, list_judgeNominal), axis=1)    
     if any(match_objects) :  
         bunbo = sum(match_objects)
         consequent_name = decision_table.columns[-1]
         match_consequents = decision_table[consequent_name].ix[match_objects] == rule.getConsequent()
-        bunshi = sum(match_consequents)
-        conf = bunshi / bunbo
-        return(conf)
+        support= sum(match_consequents)
+        conf = support / bunbo
+        return(support, conf)
     # なければNoneで    
     else :
         return(None)
+
+def getSupportConfidenceRules(rules, decision_table, list_judgeNominal) :
+    list_supp_conf = [getSupportConfidence(rule, decision_table, list_judgeNominal) for rule in rules]
+    return(tuple(map(np.mean, zip(*list_supp_conf))))
 
 # ====================================
 # rulesからsupportDを求める

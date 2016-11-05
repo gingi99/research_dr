@@ -25,7 +25,8 @@ df <- read_csv(paste0(DIRPATH,"/",files.all[1]), col_names = F)
 # データクレンジング
 # ===========================================
 df %>%
-  setnames(c("method","delfun","filename","attributes","iter1","iter2","acc"))
+  setnames(c("method","delfun","filename","attributes","iter1","iter2",
+             "acc","no","len","support","conf"))
 
 # ===========================================
 # 可視化
@@ -42,5 +43,9 @@ df %>%
 df %>%
   dplyr::group_by(method,delfun,filename,attributes) %>%
   summarise(mean_acc = mean(acc,na.rm=T), 
-            sd_acc = sd(acc,na.rm=T)) -> df.result
+            sd_acc = sd(acc,na.rm=T),
+            mean_no = mean(no, na.rm=T),
+            mean_len = mean(len, na.rm=T),
+            mean_support = mean(support, na.rm=T),
+            mean_conf = mean(conf, na.rm=T)) -> df.result
 

@@ -125,7 +125,50 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delERule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+
+    return(0)
+
+# ====================================
+# MLEM2 - 基本条件の削除 - LERS による正答率実験
+# ====================================
+def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, alpha) :
+    
+    # rule induction and rule save
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
+
+    # train data setup
+    decision_table_train, decision_class = getData(FILENAME, iter1, iter2, T = "train")
+    list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
+    
+    # alpha差別的なルールの基本条件削除 or ルールを削除
+    for attr in ATTRIBUTE_VALUE:
+        for e in ATTRIBUTE_VALUE[attr]:
+            rules = DELFUN(rules, attr, e, decision_table_train, list_judgeNominal, alpha)
+
+    # test data setup
+    decision_table_test, decision_class = getData(FILENAME, iter1, iter2, T = "test")
+    list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
+
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    # rules の数を求める
+    num = len(rules)
+    # 平均の長さを求める
+    mean_length = mlem2.getMeanLength(rules)
+    # 平均支持度と平均確信度を求める
+    list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
+    mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
+    
+    # ファイルにsave
+    savepath = DIR_UCI+'/'+FILENAME+'/fairness/02_alpha/MLEM2_delEAlphaRule_LERS.csv'
+    with open(savepath, "a") as f :
+        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
 
     return(0)
 
@@ -134,9 +177,11 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
 # ========================================
 def multi_main(n_jobs, FILENAME, FUN, **kargs):
     if FUN == MLEM2_delAttrRule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs['ATTRIBUTES']))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTES"]))
     elif FUN == MLEM2_delERule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value) for (iter1,iter2,delfun,attribute_value) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs['ATTRIBUTE_VALUE']))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value) for (iter1,iter2,delfun,attribute_value) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"]))
+    elif FUN == MLEM2_delEAlphaRule_LERS :
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value, alpha) for (iter1,iter2,delfun,attribute_value,alpha) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"], kargs["ALPHA"]))
     else :
         print("unknown function")
     return(0)
@@ -153,6 +198,7 @@ if __name__ == "__main__":
     # set function    
     DELFUNS = [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr]
     #DELFUNS = [discrimination.getRulesExcludeE, discrimination.getRulesDelE]
+    #DELFUNS = [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE]
     
     # set attribute adult    
     
@@ -165,27 +211,13 @@ if __name__ == "__main__":
                        {"Sex_Marital_Status" : ["1"]},
                        {"Sex_Marital_Status" : ["4"]}
                       ]
-    #ATTRIBUTES = [list(j) for j in set(tuple(i.keys()) for i in ATTRIBUTE_VALUE)]
-    
-    # シングルプロセスで実行
-    #for FILENAME, iter1, iter2 in product(FILENAMES, range(1,11), range(1,11)):    
-    #    print('{filename} {i1} {i2}'.format(filename=FILENAME, i1=iter1, i2=iter2))
-    #    print(MLEM2_LERS(FILENAME, iter1, iter2))
 
-    # 実行したい実験関数
-    #FUN = MLEM2_LERS
-    #FUN = MLEM2_OnlyK_LERS
-    #FUN = MLEM2_RuleClusteringBySim_LERS
-    #FUN = MLEM2_RuleClusteringByRandom_LERS
-    #FUN = MLEM2_RuleClusteringBySameCondition_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentSim_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS
-    #FUN = MLEM2_RuleClusteringBySimExceptMRule_LERS
-    #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_LERS
-    
+    # set alpha
+    ALPHA = [1.2, 1.5, 2.0]
+
     FUNS = [MLEM2_delAttrRule_LERS#,
-            #MLEM2_delERule_LERS
+            #MLEM2_delERule_LERS,
+            #MLEM2_delEAlphaRule_LERS
     ]
 
     # 並列実行
@@ -194,6 +226,7 @@ if __name__ == "__main__":
         multi_main(n_jobs, FILENAME, FUN, 
                    DELFUNS = DELFUNS, 
                    ATTRIBUTES = ATTRIBUTES,
-                   ATTRIBUTE_VALUE = ATTRIBUTE_VALUE) 
+                   ATTRIBUTE_VALUE = ATTRIBUTE_VALUE,
+                   ALPHA = ALPHA) 
     print("DONE")
     

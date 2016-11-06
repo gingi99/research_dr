@@ -38,6 +38,7 @@ def getRulesExcludeE(list_rules, attr, v) :
 
 # =====================================
 # Rules のうち 属性attr / 基本条件e を 削除したルールセットを返す
+# Rule の 属性attr / 基本条件　e を削除したルールを返す
 # =====================================
 def getRulesDelAttr(list_rules, attr) :
     rules = [delAttrFromRule(r, attr) for r in list_rules]
@@ -46,10 +47,7 @@ def getRulesDelAttr(list_rules, attr) :
 def getRulesDelE(list_rules, attr, v) :
     rules = [delEFromRule(r, attr, v) for r in list_rules]
     return(rules)
-   
-# =====================================
-# Rule の 属性attr / 基本条件　e を削除したルールを返す
-# =====================================    
+ 
 def delAttrFromRule(rule, attr) :
     rule_new = copy.deepcopy(rule)
     rule_new.delKey(attr)
@@ -59,15 +57,56 @@ def delEFromRule(rule, attr, v) :
     if rule.getValue(attr) == v : return(delAttrFromRule(rule, attr))
     else : return(rule)
     
+# =====================================
+# alpha差別的な Rule を含まないルールセットを返す
+# alpha差別的な Rule の 基本条件　e を削除したルールを返す
+# =====================================   
+def getAlphaRulesExcludeE(list_rules, attr, v, decision_table, list_judgeNominal, alpha = 0) :
+    rules = [r for r in list_rules if getElift(r, attr, v, decision_table, list_judgeNominal) <= alpha ]
+    return(rules)
+
+def getAlphaRulesDelE(list_rules, attr, v, decision_table, list_judgeNominal, alpha = 0) :
+    rules = [delEFromAlphaRule(r, attr, v, decision_table, list_judgeNominal, alpha = 0) for r in list_rules]
+    return(rules)
+    
+def delEFromAlphaRule(rule, attr, v, decision_table, list_judgeNominal, alpha = 0):
+    if rule.getValue(attr) == v :
+        elift = getElift(rule, attr, v, decision_table, list_judgeNominal)
+        if elift > alpha : return(delAttrFromRule(rule, attr))
+        else : return(rule)
+    else : 
+        return(rule)
+
+# =====================================
+# M差別的な Rule の を含まないルールセットを返す
+# M差別的な Rule の 基本条件　e を削除したルールを返す
+# =====================================  
+def getMRulesFUN(list_rules, attr, v, target_cls, DELFUN, m = 0) :
+    num_target_cls, num_other_cls, list_num_other_cls = 0, 0, []
+    classes = getClassFromRules()
+    for cls in classes :
+        if cls == target_cls :
+            num_target_cls = getNumAttrClass(list_rules, attr, v, cls)
+        else :
+            list_num_other_cls.append(getNumAttrClass(list_rules, attr, v, cls))
+    num_other_cls = sum(list_num_other_cls) / len(list_num_other_cls)
+    if num_target_cls / num_other_cls > m : #m保護なら
+        return(list_rules)
+    else :
+        return(DELFUN(list_rules, attr, v))
+
+# 有利な決定クラスのルールを減らす関数 配慮変数sを
+# 不利な決定クラスのルールを増やす関数 配慮変数sをもつ対象だけの決定表を作りルール抽出
 
 # =====================================
 # Rule の 配慮変数s での decision_tableにおける　elift
 # =====================================
-def getElift(rule, s, decision_table, list_judgeNominal):
+def getElift(rule, attr, v, decision_table, list_judgeNominal):
     conf = LERS.getConfidence(rule, decision_table, list_judgeNominal)
-    rule_s = mlem2.delEfromRule(rule,s)
-    conf_s = LERS.getConfidence(rule_s, decision_table)
-    elift = conf / conf_s
+    rule_s = delEFromRule(rule, attr, v)
+    conf_s = LERS.getConfidence(rule_s, decision_table, list_judgeNominal)
+    if conf_s == 0: elift = 999
+    else : elift = conf / conf_s
     return(elift)
     
 # =====================================

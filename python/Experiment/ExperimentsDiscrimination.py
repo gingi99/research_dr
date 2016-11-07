@@ -124,7 +124,7 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delERule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE='-'.join(strAttributeValue(ATTRIBUTE_VALUE)),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
 
     return(0)
 
@@ -167,7 +167,7 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/02_alpha/MLEM2_delEAlphaRule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE='-'.join(strAttributeValue(ATTRIBUTE_VALUE)),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
 
     return(0)
 

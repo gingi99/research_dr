@@ -125,12 +125,12 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delERule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE='-'.join(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
 
     return(0)
 
 # ====================================
-# MLEM2 - 基本条件の削除 - LERS による正答率実験
+# MLEM2 - Alpha差別ルールの処理 - LERS による正答率実験
 # ====================================
 def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, alpha) :
     

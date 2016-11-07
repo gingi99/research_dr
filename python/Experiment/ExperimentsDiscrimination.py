@@ -207,16 +207,36 @@ if __name__ == "__main__":
     # set attribute adult    
     
     # set attribute german
-    ATTRIBUTES = [["Age_years"],
-                  ["Foreign_Worker"],
-                  ["Sex_Marital_Status"],
-                  ["Age_years", "Foreign_Worker", "Sex_Marital_Status"]]
-    ATTRIBUTE_VALUE = [{"Age_years" : ["[0,25]"], "Foreigh_Worker" : ["2"], "Sex_Marital_Status" : ["4"]},
-                       {"Age_years" : ["[0,25]"]},
-                       {"Foreigh_Worker" : ["2"]},
-                       {"Sex_Marital_Status" : ["1"]},
-                       {"Sex_Marital_Status" : ["4"]}
-                      ]
+    ATTRIBUTES = {'adult_cleansing2' :
+                  [["age"],
+                   ["marital_status"],
+                   ["race"],
+                   ["sex"],
+                   ["age", "marital_status", "race", "sex"]
+                  ],
+                  'german_credit_categorical' :
+                  [["Age_years"],
+                   ["Foreign_Worker"],
+                   ["Sex_Marital_Status"],
+                   ["Age_years", "Foreign_Worker", "Sex_Marital_Status"]
+                  ]
+                 }
+                  
+    ATTRIBUTE_VALUE = {'adult_cleansing2' : 
+                       [{"age" : ["10s", "20s"]},
+                        {"marital_status" : ["Divorced"]},
+                        {"race" : ["Black"]},
+                        {"sex" : ["female"]}
+                       ]
+                       ,
+                       'german_credit_categorical' : 
+                       [{"Age_years" : ["[0,25]"], "Foreigh_Worker" : ["2"], "Sex_Marital_Status" : ["4"]},
+                        {"Age_years" : ["[0,25]"]},
+                        {"Foreigh_Worker" : ["2"]},
+                        {"Sex_Marital_Status" : ["1"]},
+                        {"Sex_Marital_Status" : ["4"]}
+                       ]
+                      }
 
     # set alpha
     ALPHA = [1.2, 1.5, 2.0]
@@ -231,8 +251,8 @@ if __name__ == "__main__":
     for FUN in FUNS :
         multi_main(n_jobs, FILENAME, FUN, 
                    DELFUNS = DELFUNS[FUN.__name__], 
-                   ATTRIBUTES = ATTRIBUTES,
-                   ATTRIBUTE_VALUE = ATTRIBUTE_VALUE,
+                   ATTRIBUTES = ATTRIBUTES[FILENAME],
+                   ATTRIBUTE_VALUE = ATTRIBUTE_VALUE[FILENAME],
                    ALPHA = ALPHA) 
     print("DONE")
     

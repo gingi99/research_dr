@@ -196,14 +196,20 @@ if __name__ == "__main__":
     FILENAME = 'german_credit_categorical'   
     
     # set function    
-    DELFUNS = [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr]
+    #DELFUNS = [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr]
     #DELFUNS = [discrimination.getRulesExcludeE, discrimination.getRulesDelE]
     #DELFUNS = [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE]
+    DELFUNS = {'MLEM2_delAttrRule_LERS' : [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr],
+               'MLEM2_delERule_LERS' : [discrimination.getRulesExcludeE, discrimination.getRulesDelE],
+               'MLEM2_delEAlphaRule_LERS' : [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE],
+              }    
     
     # set attribute adult    
     
     # set attribute german
-    ATTRIBUTES = [["Foreign_Worker"],
+    ATTRIBUTES = [["Age_years"],
+                  ["Foreign_Worker"],
+                  ["Sex_Marital_Status"],
                   ["Age_years", "Foreign_Worker", "Sex_Marital_Status"]]
     ATTRIBUTE_VALUE = [{"Age_years" : ["[0,25]"], "Foreigh_Worker" : ["2"], "Sex_Marital_Status" : ["4"]},
                        {"Age_years" : ["[0,25]"]},
@@ -215,16 +221,16 @@ if __name__ == "__main__":
     # set alpha
     ALPHA = [1.2, 1.5, 2.0]
 
-    FUNS = [MLEM2_delAttrRule_LERS#,
-            #MLEM2_delERule_LERS,
-            #MLEM2_delEAlphaRule_LERS
+    FUNS = [MLEM2_delAttrRule_LERS,
+            MLEM2_delERule_LERS,
+            MLEM2_delEAlphaRule_LERS
     ]
 
     # 並列実行
     n_jobs = 4
     for FUN in FUNS :
         multi_main(n_jobs, FILENAME, FUN, 
-                   DELFUNS = DELFUNS, 
+                   DELFUNS = DELFUNS[FUN.__name__], 
                    ATTRIBUTES = ATTRIBUTES,
                    ATTRIBUTE_VALUE = ATTRIBUTE_VALUE,
                    ALPHA = ALPHA) 

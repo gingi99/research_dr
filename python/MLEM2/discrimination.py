@@ -102,9 +102,9 @@ def getMRulesFUN(list_rules, attr, v, target_cls, DELFUN, m = 0) :
 # Rule の 配慮変数s での decision_tableにおける　elift
 # =====================================
 def getElift(rule, attr, v, decision_table, list_judgeNominal):
-    conf = LERS.getConfidence(rule, decision_table, list_judgeNominal)
+    supp, conf = LERS.getSupportConfidence(rule, decision_table, list_judgeNominal)
     rule_s = delEFromRule(rule, attr, v)
-    conf_s = LERS.getConfidence(rule_s, decision_table, list_judgeNominal)
+    supp_s, conf_s = LERS.getSupportConfidence(rule_s, decision_table, list_judgeNominal)
     if conf_s == 0: elift = 999
     else : elift = conf / conf_s
     return(elift)
@@ -122,10 +122,10 @@ def getSlift(rule, s, decision_table, operator):
 # Rule の 配慮変数s と 代替する変数c での decision_tableにおける　clift
 # =====================================
 def getClift(rule, s, c, decision_table, list_judgeNominal):
-    conf = LERS.getConfidence(rule, decision_table,list_judgeNominal)
+    supp, conf = LERS.getSupportConfidence(rule, decision_table,list_judgeNominal)
     rule_c = mlem2.delEfromRule(rule,s)
     rule_c = rule_c.setValue(s,c)
-    conf_c = LERS.getConfidence(rule_c, decision_table, list_judgeNominal)
+    supp_c, conf_c = LERS.getSupportConfidence(rule_c, decision_table, list_judgeNominal)
     clift = conf / conf_c
     return(clift)
 

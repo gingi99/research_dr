@@ -138,7 +138,7 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
 # MLEM2 - Alpha差別ルールの処理 - LERS による正答率実験
 # ====================================
 def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, alpha) :
-    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+alpha+' '+"START")    
+    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"START")    
     
     # rule induction and rule save
     fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
@@ -153,7 +153,7 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     for attr in ATTRIBUTE_VALUE:
         for e in ATTRIBUTE_VALUE[attr]:
             rules = DELFUN(rules, attr, e, decision_table_train, list_judgeNominal, alpha)
-    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+alpha+' '+"RULES")    
+    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"RULES")    
     
     # test data setup
     decision_table_test, decision_class = getData(FILENAME, iter1, iter2, T = "test")
@@ -176,7 +176,7 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/02_alpha_preserve/MLEM2_delEAlphaRule_LERS.csv'
     with open(savepath, "a") as f :
         f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
-    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+alpha+' '+"END")    
+    print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"END")    
 
     return(0)
 

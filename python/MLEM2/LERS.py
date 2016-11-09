@@ -97,6 +97,23 @@ def getSupportConfidenceRules(rules, decision_table, list_judgeNominal) :
     return(tuple(map(np.mean, zip(*list_supp_conf))))
 
 # ====================================
+# Rules の　Accuracy(a/a+b) と Recall(a/a+c) を求める
+# Ruleのaccuracyとrecallじゃないよ
+# ====================================
+def getAccuray(rules, consequent, decision_table, list_judgeNominal):
+    rules =  mlem2.getRulesClass(rules, consequent)
+    target_objects = []
+    for rule in rules :
+        match_objects = decision_table.apply(lambda obj: isExplainRule(obj, rule, list_judgeNominal), axis=1)          
+        index_objects = decision_table[match_objects].index.tolist()
+        target_objects.extend(index_objects)
+    target_objects = list(set(target_objects))
+    estimated_classes = decision_table[decision_table.columns[-1]].ix[target_objects]
+    accuracy = sum(estimated_classes == 2)/ len(target_objects)
+    recall =  sum(estimated_classes == 2) / sum(decision_table[decision_table.columns[-1]] == 2)
+    return(accuracy, recall)
+
+# ====================================
 # rulesからsupportDを求める
 # ====================================
 def getSupportD(rule) :

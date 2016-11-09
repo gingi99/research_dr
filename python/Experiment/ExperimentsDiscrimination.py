@@ -185,11 +185,11 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
 # ========================================
 def multi_main(n_jobs, FILENAME, FUN, **kargs):
     if FUN == MLEM2_delAttrRule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTES"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTES"]))
     elif FUN == MLEM2_delERule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value) for (iter1,iter2,delfun,attribute_value) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value) for (iter1,iter2,delfun,attribute_value) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"]))
     elif FUN == MLEM2_delEAlphaRule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value, alpha) for (iter1,iter2,delfun,attribute_value,alpha) in product(range(1,11), range(1,11), kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"], kargs["ALPHA"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value, alpha) for (iter1,iter2,delfun,attribute_value,alpha) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"], kargs["ALPHA"]))
     else :
         print("unknown function")
     return(0)
@@ -203,18 +203,17 @@ if __name__ == "__main__":
     FILENAME = 'adult_cleansing2'
     FILENAME = 'german_credit_categorical'   
     
+    # set iters
+    ITERS = {"adult_cleansing2" : (range(1,2), range(1,11)),
+             "german_credit_categorical" : (range(1,11), range(1,11))}
+    
     # set function    
-    #DELFUNS = [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr]
-    #DELFUNS = [discrimination.getRulesExcludeE, discrimination.getRulesDelE]
-    #DELFUNS = [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE]
     DELFUNS = {'MLEM2_delAttrRule_LERS' : [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr],
                'MLEM2_delERule_LERS' : [discrimination.getRulesExcludeE, discrimination.getRulesDelE],
                'MLEM2_delEAlphaRule_LERS' : [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE],
               }    
     
-    # set attribute adult    
-    
-    # set attribute german
+    # set attribute
     ATTRIBUTES = {'adult_cleansing2' :
                   [["age"],
                    ["marital_status"],
@@ -229,7 +228,7 @@ if __name__ == "__main__":
                    ["Age_years", "Foreign_Worker", "Sex_Marital_Status"]
                   ]
                  }
-                  
+    # set attribute value         
     ATTRIBUTE_VALUE = {'adult_cleansing2' : 
                        [{"age" : ["10s", "20s"]},
                         {"marital_status" : ["Divorced"]},
@@ -258,6 +257,7 @@ if __name__ == "__main__":
     n_jobs = 4
     for FUN in FUNS :
         multi_main(n_jobs, FILENAME, FUN, 
+                   ITERS = ITERS[FILENAME],
                    DELFUNS = DELFUNS[FUN.__name__], 
                    ATTRIBUTES = ATTRIBUTES[FILENAME],
                    ATTRIBUTE_VALUE = ATTRIBUTE_VALUE[FILENAME],

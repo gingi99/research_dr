@@ -202,6 +202,13 @@ def getPerKRules(list_rules, k) :
 def getEstimatedClass(list_rules) :
     consequents = list(set(r.getConsequent() for r in list_rules))
     return(consequents)
+ 
+# =====================================
+# 指定したConsequentを持つRulesを返す
+# =====================================    
+def getRulesClass(list_rules, consequent):
+    rules = [r for r in list_rules if r.getConsequent() == consequent]
+    return(rules)
 
 # =====================================
 # Rules のうち Suppprt = n の割合

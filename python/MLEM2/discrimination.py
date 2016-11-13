@@ -1,9 +1,9 @@
 # coding: utf-8
 # python 3.5
-#import sys
-#import os
-#sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
-#sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
+import sys
+import os
+sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
+sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
 from sklearn.metrics import accuracy_score
 import importlib
 import mlem2
@@ -158,7 +158,23 @@ if __name__ == "__main__":
     predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
     
     # 正答率を求める
-    accuracy_score(decision_class, predictions)    
+    accuracy_score(decision_class, predictions)
+    
+    # rules の数を求める
+    num = len(rules)
+    # 平均の長さを求める
+    mean_length = mlem2.getMeanLength(rules)
+
+    # train data setup
+    decision_table_train, decision_class = getData(FILENAME, iter1, iter2, T = "train")
+    list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
+
+    # 平均支持度と平均確信度を求める
+    mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
+    # AccとRecallを求める
+    acc_recall = LERS.getAccurayRecall(rules, decision_table_train, list_judgeNominal)
+    for i,c in enumerate(mlem2.getEstimatedClass(rules)):
+        print(str(acc_recall[i][0])+","+str(acc_recall[i][1]))
     
     ###### 公正配慮のテスト    
     

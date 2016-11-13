@@ -201,6 +201,7 @@ def getPerKRules(list_rules, k) :
 # =====================================    
 def getEstimatedClass(list_rules) :
     consequents = list(set(r.getConsequent() for r in list_rules))
+    consequents = sorted(consequents)
     return(consequents)
  
 # =====================================

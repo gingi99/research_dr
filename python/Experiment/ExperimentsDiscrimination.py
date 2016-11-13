@@ -52,6 +52,15 @@ def strAttributeValue(ATTRIBUTE_VALUE) :
     return("+".join(list_string))
 
 # ====================================
+# accracyとｒecall を stringにして返す
+# ====================================
+def strAccRecall(rules, acc_recall):
+    list_string = []
+    for i,c in enumerate(mlem2.getEstimatedClass(rules)):
+        list_string.append(str(acc_recall[i][0])+","+str(acc_recall[i][1]))
+    return(",".join(list_string))
+
+# ====================================
 # MLEM2 - 配慮変数の属性削除 - LERS による正答率実験
 # ====================================
 def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
@@ -83,11 +92,13 @@ def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
     decision_table_train, decision_class = getData(FILENAME, iter1, iter2, T = "train")
     list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
     mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
-
+    # AccとRecallを求める
+    acc_recall = LERS.getAccurayRecall(rules, decision_table_train, list_judgeNominal)
+    
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delAttrRule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+'-'.join(ATTRIBUTES)+' '+"END")    
     return(0)
 
@@ -125,11 +136,13 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     decision_table_train, decision_class = getData(FILENAME, iter1, iter2, T = "train")
     list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
     mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
-    
+    # AccとRecallを求める
+    acc_recall = LERS.getAccurayRecall(rules, decision_table_train, list_judgeNominal)
+        
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delERule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
 
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+"END")    
     return(0)
@@ -171,11 +184,13 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     # 平均支持度と平均確信度を求める
     list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
     mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
-    
+    # AccとRecallを求める
+    acc_recall = LERS.getAccurayRecall(rules, decision_table_train, list_judgeNominal)
+        
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/02_alpha_preserve/MLEM2_delEAlphaRule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf)+"\n")
+        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"END")    
 
     return(0)

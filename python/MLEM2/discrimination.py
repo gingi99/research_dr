@@ -19,8 +19,23 @@ def delDiscriminativeAttributes(decision_table, list_s):
     return(decision_table.drop(list_s, axis=1))
 
 # =====================================
-# Rules のうち 基本条件 e(属性attrの値v) を含むルールセットを返す
+# Rules のうち 属性attr / 基本条件 e(属性attrの値v) を含むルールセットの数を返す
+# =====================================
+def getNumRulesIncludeAttr(list_rules, attr) :
+    rules = [r for r in list_rules if attr in r.getKey()]
+    return(len(rules))
+
+def getNumRulesIncludeE(list_rules, attr, v) :
+    rules = [r for r in list_rules if r.getValue(attr) == v]
+    return(len(rules))
+
+# =====================================
+# Rules のうち 属性attr / 基本条件 e(属性attrの値v) を含むルールセットを返す
 # =====================================    
+def getRulesIncludeAttr(list_rules, attr) :
+    rules = [r for r in list_rules if attr in r.getKey()]
+    return(rules)
+
 def getRulesIncludeE(list_rules, attr, v) :
     rules = [r for r in list_rules if r.getValue(attr) == v]
     return(rules)

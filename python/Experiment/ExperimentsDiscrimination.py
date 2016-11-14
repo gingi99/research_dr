@@ -61,9 +61,20 @@ def strAccRecall(rules, acc_recall):
     return(",".join(list_string))
 
 # ====================================
+# 各クラスのルールの数 を stringにして返す
+# ====================================
+def strNumClassRules(rules):
+    list_string = []
+    for consequent in mlem2.getEstimatedClass(rules):
+        rules_consequent = mlem2.getRulesClass(rules, consequent)
+        num = len(rules_consequent)
+        list_string.append(str(num))
+    return(",".join(list_string))
+
+# ====================================
 # MLEM2 - 配慮変数の属性削除 - LERS による正答率実験
 # ====================================
-def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
+def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, CLASS, ATTRIBUTES) :
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+'-'.join(ATTRIBUTES)+' '+"START")    
     
     # rule induction and rule save
@@ -76,9 +87,19 @@ def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
     list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
 
     # 属性削除
-    for attr in ATTRIBUTES:
-        rules = DELFUN(rules, attr)
+    if CLASS != "ALL" :
+        rules_target = mlem2.getRulesClass(rules, CLASS)
+        rules_nontarget = mlem2.getRulesClass(rules, CLASS, judge=False)
+        for attr in ATTRIBUTES:
+            rules_target = DELFUN(rules_target, attr)
+        rules_target.extend(rules_nontarget)
+        rules = rules_target
+    else : 
+        for attr in ATTRIBUTES:
+            rules = DELFUN(rules, attr)
+    
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+'-'.join(ATTRIBUTES)+' '+"RULES")    
+
     # predict by LERS
     predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
 
@@ -86,6 +107,8 @@ def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
     accuracy = accuracy_score(decision_class, predictions)
     # rules の数を求める
     num = len(rules)
+    # 各クラスのrulesの数を求める
+    num_class = strNumClassRules(rules)
     # 平均の長さを求める
     mean_length = mlem2.getMeanLength(rules)
     # 平均支持度と平均確信度を求める
@@ -98,14 +121,14 @@ def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTES) :
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delAttrRule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
+        f.writelines('MLEM2_delAttrRule_LERS,{DELFUN},{FILENAME},{CLASS},{ATTRIBUTES},{iter1},{iter2},{acc},{num},{num_class},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,CLASS=CLASS,ATTRIBUTES='-'.join(ATTRIBUTES),iter1=iter1,iter2=iter2,acc=accuracy,num=num,num_class=num_class,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+'-'.join(ATTRIBUTES)+' '+"END")    
     return(0)
 
 # ====================================
 # MLEM2 - 基本条件の削除 - LERS による正答率実験
 # ====================================
-def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
+def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, CLASS, ATTRIBUTE_VALUE) :
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+"START")    
     
     # rule induction and rule save
@@ -118,9 +141,19 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
 
     # 基本条件削除
-    for attr in ATTRIBUTE_VALUE:
-        for e in ATTRIBUTE_VALUE[attr]:
-            rules = DELFUN(rules, attr, e)
+    if CLASS != "ALL" :
+        rules_target = mlem2.getRulesClass(rules, CLASS)
+        rules_nontarget = mlem2.getRulesClass(rules, CLASS, judge=False)
+        for attr in ATTRIBUTE_VALUE:
+            for e in ATTRIBUTE_VALUE[attr]:
+                rules_target = DELFUN(rules_target, attr, e)
+        rules_target.extend(rules_nontarget)
+        rules = rules_target
+    else : 
+        for attr in ATTRIBUTE_VALUE:
+            for e in ATTRIBUTE_VALUE[attr]:
+                rules = DELFUN(rules, attr, e)
+    
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+"RULES")    
     
     # predict by LERS
@@ -130,6 +163,8 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     accuracy = accuracy_score(decision_class, predictions)
     # rules の数を求める
     num = len(rules)
+    # 各クラスのrulesの数を求める
+    num_class = strNumClassRules(rules)
     # 平均の長さを求める
     mean_length = mlem2.getMeanLength(rules)
     # 平均支持度と平均確信度を求める
@@ -142,7 +177,7 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/01_suppression/MLEM2_delERule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delERule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
+        f.writelines('MLEM2_delERule_LERS,{DELFUN},{CLASS},{FILENAME},{ATTRIBUTE_VALUE},{iter1},{iter2},{acc},{num},{num_class},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,CLASS=CLASS,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),iter1=iter1,iter2=iter2,acc=accuracy,num=num,num_class=num_class,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
 
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+"END")    
     return(0)
@@ -150,7 +185,7 @@ def MLEM2_delERule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE) :
 # ====================================
 # MLEM2 - Alpha差別ルールの処理 - LERS による正答率実験
 # ====================================
-def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, alpha) :
+def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, CLASS, ATTRIBUTE_VALUE, alpha) :
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"START")    
     
     # rule induction and rule save
@@ -163,9 +198,19 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
     
     # alpha差別的なルールの基本条件削除 or ルールを削除
-    for attr in ATTRIBUTE_VALUE:
-        for e in ATTRIBUTE_VALUE[attr]:
-            rules = DELFUN(rules, attr, e, decision_table_train, list_judgeNominal, alpha)
+    if CLASS != "ALL" :
+        rules_target = mlem2.getRulesClass(rules, CLASS)
+        rules_nontarget = mlem2.getRulesClass(rules, CLASS, judge=False)
+        for attr in ATTRIBUTE_VALUE:
+            for e in ATTRIBUTE_VALUE[attr]:
+                rules_target = DELFUN(rules_target, attr, e, decision_table_train, list_judgeNominal, alpha)
+        rules_target.extend(rules_nontarget)
+        rules = rules_target
+    else : 
+        for attr in ATTRIBUTE_VALUE:
+            for e in ATTRIBUTE_VALUE[attr]:
+                rules = DELFUN(rules, attr, e, decision_table_train, list_judgeNominal, alpha)
+    
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"RULES")    
     
     # test data setup
@@ -179,6 +224,8 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     accuracy = accuracy_score(decision_class, predictions)
     # rules の数を求める
     num = len(rules)
+    # 各クラスのrulesの数を求める
+    num_class = strNumClassRules(rules)
     # 平均の長さを求める
     mean_length = mlem2.getMeanLength(rules)
     # 平均支持度と平均確信度を求める
@@ -190,7 +237,7 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
     # ファイルにsave
     savepath = DIR_UCI+'/'+FILENAME+'/fairness/02_alpha_preserve/MLEM2_delEAlphaRule_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
+        f.writelines('MLEM2_delEAlphaRule_LERS,{DELFUN},{CLASS},{FILENAME},{ATTRIBUTE_VALUE},{alpha},{iter1},{iter2},{acc},{num},{num_class},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(DELFUN=DELFUN.__name__,CLASS=CLASS,FILENAME=FILENAME,ATTRIBUTE_VALUE=strAttributeValue(ATTRIBUTE_VALUE),alpha=alpha,iter1=iter1,iter2=iter2,acc=accuracy,num=num,num_class=num_class,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
     print(datetime.now().strftime('%Y/%m/%d %H:%M:%S')+' '+FILENAME+' '+str(iter1)+' '+str(iter2)+' '+DELFUN.__name__+' '+strAttributeValue(ATTRIBUTE_VALUE)+' '+str(alpha)+' '+"END")    
 
     return(0)
@@ -200,11 +247,11 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, ATTRIBUTE_VALUE, al
 # ========================================
 def multi_main(n_jobs, FILENAME, FUN, **kargs):
     if FUN == MLEM2_delAttrRule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attributes) for (iter1,iter2,delfun,attributes) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTES"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, cls, attributes) for (iter1,iter2,delfun,cls,attributes) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["CLASSES"], kargs["ATTRIBUTES"]))
     elif FUN == MLEM2_delERule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value) for (iter1,iter2,delfun,attribute_value) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, cls, attribute_value) for (iter1,iter2,delfun,cls,attribute_value) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["CLASSES"], kargs["ATTRIBUTE_VALUE"]))
     elif FUN == MLEM2_delEAlphaRule_LERS :
-        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, attribute_value, alpha) for (iter1,iter2,delfun,attribute_value,alpha) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["ATTRIBUTE_VALUE"], kargs["ALPHA"]))
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, cls, attribute_value, alpha) for (iter1,iter2,delfun,cls,attribute_value,alpha) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["CLASSES"], kargs["ATTRIBUTE_VALUE"], kargs["ALPHA"]))
     else :
         print("unknown function")
     return(0)
@@ -227,6 +274,13 @@ if __name__ == "__main__":
                'MLEM2_delERule_LERS' : [discrimination.getRulesExcludeE, discrimination.getRulesDelE],
                'MLEM2_delEAlphaRule_LERS' : [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE],
               }    
+
+    # set all and bad class 
+    CLASSES = {'adult_cleansing2' :
+               ["ALL", "<=50K"],
+               'german_credit_categorical' :
+               ["ALL", 1]
+              }
     
     # set attribute
     ATTRIBUTES = {'adult_cleansing2' :
@@ -274,6 +328,7 @@ if __name__ == "__main__":
         multi_main(n_jobs, FILENAME, FUN, 
                    ITERS = ITERS[FILENAME],
                    DELFUNS = DELFUNS[FUN.__name__], 
+                   CLASSES = CLASSES[FILENAME],
                    ATTRIBUTES = ATTRIBUTES[FILENAME],
                    ATTRIBUTE_VALUE = ATTRIBUTE_VALUE[FILENAME],
                    ALPHA = ALPHA) 

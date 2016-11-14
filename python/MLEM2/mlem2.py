@@ -205,10 +205,11 @@ def getEstimatedClass(list_rules) :
     return(consequents)
  
 # =====================================
-# 指定したConsequentを持つRulesを返す
+# 指定したConsequentを持つ / 持たないRulesを返す
 # =====================================    
-def getRulesClass(list_rules, consequent):
-    rules = [r for r in list_rules if r.getConsequent() == consequent]
+def getRulesClass(list_rules, consequent, judge=True):
+    if judge : rules = [r for r in list_rules if r.getConsequent() == consequent]
+    else : rules = [r for r in list_rules if r.getConsequent() != consequent]     
     return(rules)
 
 # =====================================

@@ -309,7 +309,8 @@ if __name__ == "__main__":
              "german_credit_categorical" : (range(1,11), range(1,11))}
     
     # set function    
-    DELFUNS = {'MLEM2_delAttrRule_LERS' : [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr],
+    DELFUNS = {'MLEM2_LERS' : [],
+               'MLEM2_delAttrRule_LERS' : [discrimination.getRulesExcludeAttr, discrimination.getRulesDelAttr],
                'MLEM2_delERule_LERS' : [discrimination.getRulesExcludeE, discrimination.getRulesDelE],
                'MLEM2_delEAlphaRule_LERS' : [discrimination.getAlphaRulesExcludeE, discrimination.getAlphaRulesDelE],
               }    

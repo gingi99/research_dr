@@ -72,6 +72,43 @@ def strNumClassRules(rules):
     return(",".join(list_string))
 
 # ====================================
+# MLEM2 - LERS による正答率実験
+# ====================================
+def MLEM2_LERS(FILENAME, iter1, iter2) :
+    # rule induction and rule save
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/rules/'+'rules_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = mlem2.loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else mlem2.getRulesByMLEM2(FILENAME, iter1, iter2)
+    if not os.path.isfile(fullpath_filename): mlem2.savePickleRules(rules, fullpath_filename)
+
+    # test data setup
+    decision_table_test, decision_class = getData(FILENAME, iter1, iter2, T = "test")
+    list_judgeNominal = getJudgeNominal(decision_table_test, FILENAME)
+
+    # predict by LERS
+    predictions = LERS.predictByLERS(rules, decision_table_test, list_judgeNominal)
+
+    # 正答率を求める
+    accuracy = accuracy_score(decision_class, predictions)
+    # rules の数を求める
+    num = len(rules)
+    # 各クラスのrulesの数を求める
+    num_class = strNumClassRules(rules)
+    # 平均の長さを求める
+    mean_length = mlem2.getMeanLength(rules)
+    # 平均支持度と平均確信度を求める
+    decision_table_train, decision_class = getData(FILENAME, iter1, iter2, T = "train")
+    list_judgeNominal = getJudgeNominal(decision_table_train, FILENAME)
+    mean_support, mean_conf = LERS.getSupportConfidenceRules(rules, decision_table_train, list_judgeNominal)
+    # AccとRecallを求める
+    acc_recall = LERS.getAccurayRecall(rules, decision_table_train, list_judgeNominal)
+    
+    # ファイルにsave
+    savepath = DIR_UCI+'/'+FILENAME+'/fairness/00_normal/MLEM2_LERS.csv'
+    with open(savepath, "a") as f :
+        f.writelines('MLEM2_LERS,{FILENAME},{iter1},{iter2},{acc},{num},{num_class},{mean_length},{mean_support},{mean_conf},{acc_recall}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,num=num,num_class=num_class,mean_length=mean_length,mean_support=mean_support,mean_conf=mean_conf,acc_recall=strAccRecall(rules, acc_recall))+"\n")
+    return(0)
+
+# ====================================
 # MLEM2 - 配慮変数の属性削除 - LERS による正答率実験
 # ====================================
 def MLEM2_delAttrRule_LERS(FILENAME, iter1, iter2, DELFUN, CLASS, ATTRIBUTES) :
@@ -246,7 +283,9 @@ def MLEM2_delEAlphaRule_LERS(FILENAME, iter1, iter2, DELFUN, CLASS, ATTRIBUTE_VA
 # multi に実行する
 # ========================================
 def multi_main(n_jobs, FILENAME, FUN, **kargs):
-    if FUN == MLEM2_delAttrRule_LERS :
+    if FUN == MLEM2_LERS :
+        joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2) for (iter1,iter2) in product(kargs["ITERS"][0], kargs["ITERS"][1]))
+    elif FUN == MLEM2_delAttrRule_LERS :
         joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, cls, attributes) for (iter1,iter2,delfun,cls,attributes) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["CLASSES"], kargs["ATTRIBUTES"]))
     elif FUN == MLEM2_delERule_LERS :
         joblib.Parallel(n_jobs=n_jobs)(joblib.delayed(FUN)(FILENAME, iter1, iter2, delfun, cls, attribute_value) for (iter1,iter2,delfun,cls,attribute_value) in product(kargs["ITERS"][0], kargs["ITERS"][1], kargs["DELFUNS"], kargs["CLASSES"], kargs["ATTRIBUTE_VALUE"]))
@@ -317,7 +356,8 @@ if __name__ == "__main__":
     # set alpha
     ALPHA = [1.2, 1.5, 2.0]
 
-    FUNS = [MLEM2_delAttrRule_LERS,
+    FUNS = [MLEM2_LERS,
+            MLEM2_delAttrRule_LERS,
             MLEM2_delERule_LERS,
             MLEM2_delEAlphaRule_LERS
     ]

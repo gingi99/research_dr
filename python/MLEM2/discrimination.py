@@ -29,6 +29,14 @@ def getNumRulesIncludeE(list_rules, attr, v) :
     rules = [r for r in list_rules if r.getValue(attr) == v]
     return(len(rules))
 
+def getNumRulesClassIncludeAttr(list_rules, attr, cls) :
+    rules = [r for r in list_rules if (attr in r.getKey()) and r.getConsequent() == cls]
+    return(len(rules))
+
+def getNumRulesClassIncludeE(list_rules, attr, v, cls) :
+    rules = [r for r in list_rules if r.getValue(attr) == v and r.getConsequent() == cls]
+    return(len(rules))
+
 # =====================================
 # Rules のうち 属性attr / 基本条件 e(属性attrの値v) を含むルールセットを返す
 # =====================================    
@@ -93,25 +101,38 @@ def delEFromAlphaRule(rule, attr, v, decision_table, list_judgeNominal, alpha = 
         return(rule)
 
 # =====================================
-# M差別的な Rule の を含まないルールセットを返す
-# M差別的な Rule の 基本条件　e を削除したルールを返す
+# M差別的な Rule の を含まない / 基本条件　e を削除したルールセットを返す
 # =====================================  
 def getMRulesFUN(list_rules, attr, v, target_cls, DELFUN, m = 0) :
     num_target_cls, num_other_cls, list_num_other_cls = 0, 0, []
-    classes = getClassFromRules()
+    classes = mlem2.getEstimatedClass(list_rules)
     for cls in classes :
         if cls == target_cls :
-            num_target_cls = getNumAttrClass(list_rules, attr, v, cls)
+            num_target_cls = getNumRulesClassIncludeE(list_rules, attr, v, cls)
         else :
-            list_num_other_cls.append(getNumAttrClass(list_rules, attr, v, cls))
-    num_other_cls = sum(list_num_other_cls) / len(list_num_other_cls)
-    if num_target_cls / num_other_cls > m : #m保護なら
+            list_num_other_cls.append(getNumRulesClassIncludeE(list_rules, attr, v, cls))
+    num_other_cls = sum(list_num_other_cls) / len(list_num_other_cls) #複数クラスの場合を考慮
+    if (num_target_cls / (num_target_cls + num_other_cls)) > m : #m保護なら
         return(list_rules)
     else :
         return(DELFUN(list_rules, attr, v))
 
+# =====================================
+# 配慮変数sをもつ対象だけの決定表を作る
+# =====================================
+def createDTSuppoterdbyRule(list_rules, attr, v, cls, decision_table):
+    target_indice = []
+    target_rules = [r for r in list_rules if r.getValue(attr) == v and r.getConsequent() == cls]
+    for rule in target_rules:
+        target_indice.extend(rule.getSupport())
+    target_indice = list(set(target_indice))
+    target_indice = sorted(target_indice)
+    new_decision_table = decision_table_train.ix[target_indice]
+    new_decision_class = new_decision_table[new_decision_table.columns[-1]].values.tolist()
+    return(new_decision_table, new_decision_class)
+
 # 有利な決定クラスのルールを減らす関数 配慮変数sを
-# 不利な決定クラスのルールを増やす関数 配慮変数sをもつ対象だけの決定表を作りルール抽出
+
 
 # =====================================
 # Rule の 配慮変数s での decision_tableにおける　elift

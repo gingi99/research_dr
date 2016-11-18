@@ -10,7 +10,7 @@ library(compiler)
 # ---------------------
 # パラメータ
 # ---------------------
-kFilenames <- c("german_credit_categorical")
+kFilenames <- c("default_cleansing")
 setwd("/Users/ooki/git/research_dr/R/createData")
 kIter1 <- 10
 kIter2 <- 10

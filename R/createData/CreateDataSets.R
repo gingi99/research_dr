@@ -21,6 +21,10 @@ car <- fread("/data/uci/car/car.tsv")
 head(car)
 #write.table(car, "/data/uci/car/car.tsv", sep="\t", quote=FALSE, row.names=FALSE)
 
+### default
+default <- fread("/mnt/data/uci/default/default.tsv")
+#write.table(default, "/mnt/data/uci/default/default.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+
 ### dermatology
 dermatology <- fread("/data/uci/dermatology/dermatology.tsv")
 head(dermatology)
@@ -138,7 +142,7 @@ createDataForCrossValidation <- function(filename, n, m){
     }
   }
 }
-#createDataForCrossValidation("/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", 10, 10)
+createDataForCrossValidation("/mnt/data/uci/default_cleansing/default_cleansing.tsv", 10, 10)
 
 ## Adult's data cleansing
 adult <- fread("/data/uci/adult/adult.tsv")
@@ -161,3 +165,12 @@ credit_categorical$Age_years <- cut(credit_categorical$Age_years, breaks=c(0,25,
 names(credit_categorical)[length(credit_categorical)] <- "class"
 credit_categorical$class <- credit_categorical$class + 1
 #write.table(credit_categorical, "/mnt/data/uci/german_credit_categorical/german_credit_categorical.tsv", sep="\t", quote=FALSE, row.names=FALSE)
+
+## default data cleansing
+names(default)[1] <- "LIMIT_BAL"
+options(scipen=100)
+default.clean <- dplyr::select(default, LIMIT_BAL, SEX, EDUCATION, MARRIAGE, AGE, PAY_0, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, class)
+default.clean$LIMIT_BAL <- cut(default.clean$LIMIT_BAL, breaks=c(0,10000,50000,100000,200000,300000,400000,500000,1000000), right = TRUE, include.lowest = TRUE)
+default.clean$AGE <- cut(default.clean$AGE, breaks=c(0,10,20,30,40,50,60,70,80), right = TRUE, include.lowest = TRUE)
+default.clean$class <- default.clean$class + 1
+#write.table(default.clean, "/mnt/data/uci/default_cleansing/default_cleansing.tsv", sep="\t", quote=FALSE, row.names=FALSE)

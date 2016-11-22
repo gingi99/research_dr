@@ -625,11 +625,14 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and k
-    FILENAMES = ['adult_cleansing2']
+    #FILENAMES = ['adult_cleansing2']
+    FILENAMES = ['default_cleansing']
     #FILENAMES = ['hayes-roth']
     #FILENAMES = ['german_credit_categorical']
     #FILENAMES = ['nursery']
-    k_range = range(5,50,5)
+
+    #k_range = range(5,50,5)
+    k_range = range(2,20,2)    
     #k_range = range(2,11,1)
     #k_range = range(2,20,2)    
     #k_range = range(3,30,3)
@@ -658,6 +661,7 @@ if __name__ == "__main__":
             #MLEM2_RuleClusteringBySameCondition_LERS,
             #MLEM2_RuleClusteringByConsistentSim_LERS,
             #MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,
+            MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS,
             MLEM2_RuleClusteringBySimExceptMRule_LERS,
             MLEM2_RuleClusteringByConsistentExceptMRule_LERS]
 

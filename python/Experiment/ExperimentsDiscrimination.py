@@ -357,14 +357,14 @@ if __name__ == "__main__":
     # set alpha
     ALPHA = [1.2, 1.5, 2.0]
 
-    FUNS = [MLEM2_LERS,
-            MLEM2_delAttrRule_LERS,
-            MLEM2_delERule_LERS,
-            MLEM2_delEAlphaRule_LERS
+    FUNS = [MLEM2_LERS#,
+            #MLEM2_delAttrRule_LERS,
+            #MLEM2_delERule_LERS,
+            #MLEM2_delEAlphaRule_LERS
     ]
 
     # 並列実行
-    n_jobs = 4
+    n_jobs = 48
     for FUN in FUNS :
         multi_main(n_jobs, FILENAME, FUN, 
                    ITERS = ITERS[FILENAME],

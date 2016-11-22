@@ -395,12 +395,14 @@ if __name__ == "__main__":
 
     # set data and k
     #FILENAMES = ['adult_cleansing2']
+    FILENAMES = ['default_cleansing']
     #FILENAMES = ['hayes-roth']
-    FILENAMES = ['german_credit_categorical']
+    #FILENAMES = ['german_credit_categorical']
     #FILENAMES = ['nursery']
     #k_range = range(5,45,5)
+    k_range = range(2,20,2)    
     #k_range = range(2,11,1)
-    k_range = range(2,20,2)
+    #k_range = range(2,20,2)
     #k_range = range(3,30,3)
     
     # シングルプロセスで実行
@@ -416,15 +418,17 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringByConsistentSim_Identified
     #FUN = MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified
     #FUN = MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified
-    FUN = MLEM2_RuleClusteringBySimExceptMRule_Identified
-    FUN = MLEM2_RuleClusteringByConsistentExceptMRule_Identified
+    #FUN = MLEM2_RuleClusteringBySimExceptMRule_Identified
+    #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_Identified
 
     FUNS = [MLEM2_Identified,
             MLEM2_OnlyK_Identified,
             MLEM2_RuleClusteringByRandom_Identified,
             MLEM2_RuleClusteringBySameCondition_Identified,
             #MLEM2_RuleClusteringByConsistentSim_Identified,
-            MLEM2_RuleClusteringByConsistentSimExceptMRule_Identified]
+            MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified,
+            MLEM2_RuleClusteringBySimExceptMRule_Identified,
+            MLEM2_RuleClusteringByConsistentExceptMRule_Identified]
 
     # 並列実行
     proc=48

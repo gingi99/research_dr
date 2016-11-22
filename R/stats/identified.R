@@ -22,7 +22,8 @@ FILENAME <- "hayes-roth"
 FILENAME <- "german_credit_categorical"
 FILENAMES <- c("adult_cleansing2", "nursery", "hayes-roth", "german_credit_categorical")
 df <- data.frame()
-for(FILENAME in FILENAMES){DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
+for(FILENAME in FILENAMES){
+  DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
   files.all <- list.files(DIRPATH)
   files.target <- files.all[str_detect(files.all, "Identify")]
   df.tmp <- lapply(files.target, function(f){

@@ -17,6 +17,7 @@ library(rlist)
 # ===========================================
 
 FILENAME <- "adult_cleansing2"
+FILENAME <- "default_cleansing"
 FILENAME <- "german_credit_categorical"
 FILENAME <- "hayes-roth"
 FILENAME <- "nursery"
@@ -37,7 +38,6 @@ df <- dplyr::bind_rows(df,df1)
 # ===========================================
 # データクレンジング
 # ===========================================
-
 df %>%
   setnames(c("method","k","filename","iter1","iter2","acc"))
 
@@ -52,8 +52,8 @@ df %>%
          #method == "MLEM2_RuleClusteringBySim_LERS" | 
          method == "MLEM2_RuleClusteringByRandom_LERS" |
          method == "MLEM2_RuleClusteringBySameCondition_LERS" |
-         method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
-         method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
+         #method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
+         #method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
          method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
          method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
          method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS") %>%
@@ -67,15 +67,15 @@ df %>%
 # acc の 平均線
 df %>%
   filter(method == "MLEM2_LERS" | 
-           method == "MLEM2_OnlyK_LERS" | 
-           #method == "MLEM2_RuleClusteringBySim_LERS" | 
-           method == "MLEM2_RuleClusteringByRandom_LERS" |
-           method == "MLEM2_RuleClusteringBySameCondition_LERS" |
-           method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
-           method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
-           method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
-           method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
-           method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS") %>%
+         method == "MLEM2_OnlyK_LERS" | 
+         #method == "MLEM2_RuleClusteringBySim_LERS" | 
+         method == "MLEM2_RuleClusteringByRandom_LERS" |
+         method == "MLEM2_RuleClusteringBySameCondition_LERS" |
+         #method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
+         #method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
+         method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS") %>%
   mutate(k = formatC(.$k, width=2, flag="0")) %>%
   mutate(k = as.character(k)) %>%
   group_by(filename, k, method) %>%
@@ -151,7 +151,7 @@ df %>%
 # ===========================================
 df %>%
   filter(#method == "MLEM2_RuleClusteringByConsistentSim_LERS" |
-    method == "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS" |
+    method == "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS" |
     method == "MLEM2_RuleClusteringBySimExceptMRule_LERS" |
     method == "MLEM2_RuleClusteringByConsistentExceptMRule_LERS" |
     method == "MLEM2_RuleClusteringByRandom_LERS" |
@@ -161,7 +161,7 @@ df %>%
   mutate(k = paste0("k=",as.character(k))) %>%
   mutate(method = factor(.$method, 
                          levels = c(#"MLEM2_RuleClusteringByConsistentSim_LERS",
-                           "MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS",
+                           "MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS",
                            "MLEM2_RuleClusteringBySimExceptMRule_LERS",
                            "MLEM2_RuleClusteringByConsistentExceptMRule_LERS",
                            "MLEM2_RuleClusteringByRandom_LERS",

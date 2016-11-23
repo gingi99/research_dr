@@ -355,21 +355,21 @@ if __name__ == "__main__":
     # set data and k
     #FILENAMES = ['adult_cleansing2']
     #FILENAMES = ['default_cleansing']
-    FILENAMES = ['hayes-roth']
+    #FILENAMES = ['hayes-roth']
     #FILENAMES = ['german_credit_categorical']
-    #FILENAMES = ['nursery']
+    FILENAMES = ['nursery']
 
     #k_range = range(5,50,5)
     #k_range = range(2,20,2)    
-    k_range = range(2,11,1)
+    #k_range = range(2,11,1)
     #k_range = range(2,20,2)    
-    #k_range = range(3,30,3)
+    k_range = range(3,30,3)
     
-    FUNS = [MLEM2_STAT,
-            MLEM2_OnlyK_STAT,
+    FUNS = [#MLEM2_STAT,
+            #MLEM2_OnlyK_STAT,
             #MLEM2_RuleClusteringBySim_LERS,
-            MLEM2_RuleClusteringByRandom_STAT,
-            MLEM2_RuleClusteringBySameCondition_STAT,
+            #MLEM2_RuleClusteringByRandom_STAT,
+            #MLEM2_RuleClusteringBySameCondition_STAT,
             #MLEM2_RuleClusteringByConsistentSim_LERS,
             #MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,
             MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_STAT,

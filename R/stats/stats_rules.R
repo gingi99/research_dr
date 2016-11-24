@@ -143,6 +143,8 @@ df %>%
             sd_len = format(round(sd(len,na.rm=T),3),nsmall=3),
             mean_support = format(round(mean(support,na.rm=T),3),nsmall=3), 
             sd_support = format(round(sd(support,na.rm=T),3),nsmall=3)) -> tmp.df
+
+# 1指標のみ
 ggplot(tmp.df, aes(x=k, y=mean_num, group=method, fill=method)) +
   geom_bar(stat="identity", width = 0.7, position = position_dodge(width = 0.9)) +
   geom_errorbar(aes(ymax = mean_num + sd_num, ymin = mean_num - sd_num, color=method),
@@ -160,12 +162,22 @@ ggplot(tmp.df, aes(x=k, y=mean_num, group=method, fill=method)) +
 
 # まとめて表示
 tmp.df %>%
+  ungroup() %>%
+  mutate(filename = factor(.$filename, 
+                         levels = c("adult_cleansing2","default_cleansing",
+                                    "german_credit_categorical","hayes-roth",
+                                    "nursery"),
+                         labels = c("adult","default","german-credit",
+                                    "hayes-roth","nursery"))) %>%
   gather(kagi1, atai1, -k, -filename, -method, -sd_num, -sd_len, -sd_support) %>%
   gather(kagi2, atai2, -k, -filename, -method, -kagi1, -atai1) %>%
   filter((kagi1 == "mean_len" & kagi2 == "sd_len") | 
          (kagi1 == "mean_num" & kagi2 == "sd_num") |
          (kagi1 == "mean_support" & kagi2 == "sd_support")) %>%
-  mutate(kagi1 = paste0(filename," ",kagi1)) %>%
+  mutate(kagi1 = factor(.$kagi1, 
+                        levels = c("mean_num","mean_len","mean_support"),
+                        labels = c("num","length","support"))) %>%
+  mutate(kagi1 = paste0(filename," / ",kagi1)) %>%
   mutate(atai1 = as.numeric(atai1)) %>%
   mutate(atai2 = as.numeric(atai2)) %>%
   ggplot(aes(x=k, y=atai1, group=method, fill=method)) +
@@ -179,6 +191,6 @@ tmp.df %>%
     labs(x="", y="") +
     theme_bw(base_family = "HiraKakuProN-W3") +
     theme(axis.title.x = element_text(size=15)) +
-    theme(axis.text.x = element_text(size=10, angle = 45, hjust = 1)) +
+    theme(axis.text.x = element_text(size=10, angle = 30, hjust = 1)) +
     theme(axis.title.y = element_text(size=15)) +
     theme(axis.text.y = element_text(size=10))

@@ -302,10 +302,12 @@ if __name__ == "__main__":
 
     # set data and protected attributes
     FILENAME = 'adult_cleansing2'
+    FILENAME = 'default_cleansing'
     FILENAME = 'german_credit_categorical'   
     
     # set iters
     ITERS = {"adult_cleansing2" : (range(1,2), range(1,11)),
+             "default_cleansing" : (range(1,2), range(1,11)),
              "german_credit_categorical" : (range(1,11), range(1,11))}
     
     # set function    
@@ -318,6 +320,8 @@ if __name__ == "__main__":
     # set all and bad class 
     CLASSES = {'adult_cleansing2' :
                ["ALL", "<=50K"],
+               'default_cleansing' :
+               ["ALL", 2],
                'german_credit_categorical' :
                ["ALL", 1]
               }
@@ -329,6 +333,13 @@ if __name__ == "__main__":
                    ["race"],
                    ["sex"],
                    ["age", "marital_status", "race", "sex"]
+                  ],
+                  'default_cleansing' :
+                  [["SEX"],
+                   ["EDUCATION"],
+                   ["MARRIAGE"],
+                   ["AGE"],
+                   ["SEX", "EDUCATION", "MARRIAGE", "AGE"]
                   ],
                   'german_credit_categorical' :
                   [["Age_years"],
@@ -343,8 +354,13 @@ if __name__ == "__main__":
                         {"marital_status" : ["Divorced"]},
                         {"race" : ["Black"]},
                         {"sex" : ["female"]}
-                       ]
-                       ,
+                       ],
+                       'default_cleansing' : 
+                       [{"SEX" : ["2"]},
+                        {"EDUCATION" : ["1"]},
+                        {"MARRIAGE" : ["1"]},
+                        {"AGE" : ["(20,30]"]}
+                       ],
                        'german_credit_categorical' : 
                        [{"Age_years" : ["[0,25]"], "Foreigh_Worker" : ["2"], "Sex_Marital_Status" : ["4"]},
                         {"Age_years" : ["[0,25]"]},
@@ -357,10 +373,10 @@ if __name__ == "__main__":
     # set alpha
     ALPHA = [1.2, 1.5, 2.0]
 
-    FUNS = [MLEM2_LERS#,
-            #MLEM2_delAttrRule_LERS,
-            #MLEM2_delERule_LERS,
-            #MLEM2_delEAlphaRule_LERS
+    FUNS = [MLEM2_LERS,
+            MLEM2_delAttrRule_LERS,
+            MLEM2_delERule_LERS,
+            MLEM2_delEAlphaRule_LERS
     ]
 
     # 並列実行

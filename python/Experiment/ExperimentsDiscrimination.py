@@ -301,9 +301,9 @@ def multi_main(n_jobs, FILENAME, FUN, **kargs):
 if __name__ == "__main__":
 
     # set data and protected attributes
-    FILENAME = 'adult_cleansing2'
+    #FILENAME = 'adult_cleansing2'
     FILENAME = 'default_cleansing'
-    FILENAME = 'german_credit_categorical'   
+    #FILENAME = 'german_credit_categorical'   
     
     # set iters
     ITERS = {"adult_cleansing2" : (range(1,2), range(1,11)),

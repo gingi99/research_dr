@@ -614,7 +614,7 @@ if __name__ == "__main__":
     #FILENAMES = ['nursery']
 
     #k_range = range(5,50,5)
-    k_range = range(2,20,2)    
+    k_range = range(5,50,5)    
     #k_range = range(2,11,1)
     #k_range = range(2,20,2)    
     #k_range = range(3,30,3)
@@ -637,10 +637,10 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_LERS
     
     FUNS = [#MLEM2_LERS,
-            #MLEM2_OnlyK_LERS,
+            MLEM2_OnlyK_LERS,
             #MLEM2_RuleClusteringBySim_LERS,
-            #MLEM2_RuleClusteringByRandom_LERS,
-            #MLEM2_RuleClusteringBySameCondition_LERS,
+            MLEM2_RuleClusteringByRandom_LERS,
+            MLEM2_RuleClusteringBySameCondition_LERS,
             #MLEM2_RuleClusteringByConsistentSim_LERS,
             #MLEM2_RuleClusteringByConsistentSimExceptMRule_LERS,
             MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_LERS,

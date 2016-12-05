@@ -341,16 +341,16 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     elif FUN == MLEM2_RuleClusteringBySimExceptMRule_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
-            multiargs.append((FILENAME,iter1,iter2,k,k))
+        for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k,p))
         results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_RuleClusteringByConsistentExceptMRule_Identified 用
     elif FUN == MLEM2_RuleClusteringByConsistentExceptMRule_Identified :
         k_range = kargs['k'] if 'k' in kargs else range(2,11)
         #for k in k_range:
-        for FILENAME, iter1, iter2, k in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
-            multiargs.append((FILENAME,iter1,iter2,k,k))
+        for FILENAME, iter1, iter2, k, p in product(FILENAMES, range(1,11), range(1,11), k_range, p_range):
+            multiargs.append((FILENAME,iter1,iter2,k,k,p))
         results.extend(pool.starmap(FUN, multiargs))
     
     # MLEM2_OnlyK_Identified 用
@@ -384,7 +384,7 @@ def multi_main(proc, FILENAMES, FUN, **kargs):
     # その他
     else :
         print("I dont' know the function.")        
-  
+ 
     #results = pool.starmap(FUN, multiargs)
     return(results)
       
@@ -399,8 +399,9 @@ if __name__ == "__main__":
     #FILENAMES = ['hayes-roth']
     #FILENAMES = ['german_credit_categorical']
     #FILENAMES = ['nursery']
+
     #k_range = range(5,45,5)
-    k_range = range(2,20,2)    
+    k_range = range(5,50,5)    
     #k_range = range(2,11,1)
     #k_range = range(2,20,2)
     #k_range = range(3,30,3)
@@ -421,11 +422,11 @@ if __name__ == "__main__":
     #FUN = MLEM2_RuleClusteringBySimExceptMRule_Identified
     #FUN = MLEM2_RuleClusteringByConsistentExceptMRule_Identified
 
-    FUNS = [MLEM2_Identified,
+    FUNS = [#MLEM2_Identified,
             MLEM2_OnlyK_Identified,
             MLEM2_RuleClusteringByRandom_Identified,
             MLEM2_RuleClusteringBySameCondition_Identified,
-            #MLEM2_RuleClusteringByConsistentSim_Identified,
+            MLEM2_RuleClusteringByConsistentSim_Identified,
             MLEM2_RuleClusteringByConsistentTimesSimExceptMRule_Identified,
             MLEM2_RuleClusteringBySimExceptMRule_Identified,
             MLEM2_RuleClusteringByConsistentExceptMRule_Identified]

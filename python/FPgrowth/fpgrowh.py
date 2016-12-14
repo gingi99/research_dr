@@ -6,6 +6,8 @@ from pyspark.mllib.fpm import FPGrowth
 from pyspark import StorageLevel
 from pyspark import SparkConf
 import sys
+import os
+import pickle
 import collections
 import pandas as pd
 import numpy as np
@@ -52,6 +54,18 @@ class Rule :
        print("consequent:" + str(self.consequent))
        print("support:" + str(self.support))
        print("conf:" + str(self.conf))
+
+# ======================================================
+# rules load and save
+# ======================================================
+def loadPickleRules(fullpath_filename) :
+    with open(fullpath_filename, mode='rb') as inputfile:
+        rules = pickle.load(inputfile)
+    return(rules)
+
+def savePickleRules(rules, fullpath_filename) :
+    with open(fullpath_filename, mode='wb') as outfile:
+        pickle.dump(rules, outfile,  pickle.HIGHEST_PROTOCOL)
 
 # ======================================================
 # Rules のうち、P個の属性値が分かれば、クラスを推定できるか 
@@ -136,25 +150,25 @@ def estimateClass(obj, rules) :
 # ======================================================
 # FP-growth によるルール抽出
 # ======================================================
-def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0, numPartitions=10) :
+def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=0.1, min_conf=0.0, numPartitions=32, ratio=True) :
     
     # read data
     filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.txt'
     data = sc.textFile(filepath)
+    print(filepath)
     transactions = data.map(lambda line: line.strip().split(' '))
 
     # 最小支持度を定める
     nrow = sum(1 for line in open(filepath))
-    minSupport = float(min_sup) / float(nrow)
-
+    minSupport = float(min_sup)  if ratio == True else float(min_sup) / float(nrow)
+     
     # model 定義
-    model = FPGrowth.train(transactions, minSupport=minSupport, numPartitions=numPartitions)
+    model = FPGrowth.train(transactions, minSupport = minSupport, numPartitions=numPartitions)
     
     # クラスを含まない頻出アイテム集合だけを取り出す
     nocls_freq_item_sets = model.freqItemsets().filter(lambda fis: all(not x in fis.items for x in classes))
     # クラスを含む頻出アイテム集合でかつ長さが2以上のものを取り出す
     cls_freq_item_sets = model.freqItemsets().filter(lambda fis: any(x in fis.items for x in classes)).filter(lambda fis: len(fis.items) > 1).collect()
-    # クラスを含む頻出アイテム集合について繰り返し
     rules = []
     
     #def getRule(cls_freq_item):
@@ -177,6 +191,7 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0,
 #
     #rules = cls_freq_item_sets.foreach(getRule)
 
+    rules = []
     print("item count :"+str(len(cls_freq_item_sets)))
     for cls_freq_item in cls_freq_item_sets:
         
@@ -204,8 +219,6 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=3, min_conf=1.0,
 
     return(rules)
 
-    # === 古いやつは下
-    
     # 実行
     #result = model.freqItemsets().collect()
 
@@ -256,21 +269,21 @@ def predictByLERS(FILENAME, iter1, iter2, rules) :
 # FP-growth_LERS
 # ======================================================
 def FPGrowth_LERS(FILENAME, iter1, iter2, min_sup):
-    classes = ['D1', 'D2', 'D3']
-    min_conf = 1.0
+    classes = ['D1', 'D2']
+    min_conf = 0.0
  
     # rule 抽出
-    rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
+    fullpath_filename = DIR_UCI+'/'+FILENAME+'/FPGrowth/rules/'+'rules-'+str(min_sup)+'_'+str(iter1)+'-'+str(iter2)+'.pkl'
+    rules = loadPickleRules(fullpath_filename) if os.path.isfile(fullpath_filename) else getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
+    if not os.path.isfile(fullpath_filename): savePickleRules(rules, fullpath_filename)
 
     # predict by LERS
-    accuracy = predictByLERS(FILENAME, iter1, iter2, rules)
+    acc = predictByLERS(FILENAME, iter1, iter2, rules)
     
     # save
-    savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth_LERS.csv'
+    savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth/FPGrowth_LERS.csv'
     with open(savepath, "a") as f :
-        f.writelines('FPGrowth_LERS,{min_sup},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,min_sup=min_sup)+"\n")
-
-    return(accuracy)
+        f.writelines('FPGrowth_LERS,{min_sup},{min_conf},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=acc,min_sup=min_sup,min_conf=min_conf)+"\n")
 
 # ========================================
 # listの平均と分散を求める
@@ -289,7 +302,7 @@ def multi_main(proc, FILENAME, FUN, **kargs):
 
     # FPGrowth_LERS 用
     if FUN == FPGrowth_LERS :
-        min_sup_range = kargs['min_sup'] if 'min_sup' in kargs else range(2,11)
+        min_sup_range = kargs['min_sup_range']
         for iter1, iter2, min_sup in product(range(1,11), range(1,11), min_sup_range):            
             multiargs.append((FILENAME, iter1, iter2, min_sup))
         print(multiargs)
@@ -314,60 +327,57 @@ if __name__ == "__main__":
     sc = SparkContext(conf=SparkConf())
 
     # データ準備
-    #FILEPATH = "/usr/local/share/spark/data/mllib/sample_fpgrowth.txt"
-    #"/data/uci/hayes-roth/alpha/hayes-roth-train2-10.txt"
-    FILENAME = "hayes-roth" 
-    #FILENAME = "nursery" 
+    FILENAME = "adult_cleansing2" 
+    FILENAME = "default_cleansing" 
     FILENAME = "german_credit_categorical" 
 
     # データのインデックス
-    iter1 = 6 
-    iter2 = 9 
+    #iter1 = 6 
+    #iter2 = 9 
   
     # クラスの数を設定
-    classes = ['D1', 'D2', 'D3']
-    #classes = ['D1', 'D2', 'D3', 'D4', 'D5']
     classes = ['D1', 'D2']
 
     # support と confidence の閾値
-    min_sup = 2
-    min_sup_range = range(10,100,10)
-    #min_sup_range = range(3,30,3)
-    min_conf = 1.0
+    min_sup = 0.1
+    min_sup_range = [0.05, 0.10, 0.15, 0.20, 0.25]
+    min_conf = 0.0
 
     # ファイルを保存する場所
-    savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth_LERS.csv'
+    #savepath = DIR_UCI+'/'+FILENAME+'/FPGrowth_LERS.csv'
  
     # rule 抽出
-    #rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
-    #for rule in rules :
+    # rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf, ratio=False)
+    # for rule in rules :
     #    print(rule.output())
 
     # predict by LERS
-    #print(predictByLERS(FILENAME, iter1, iter2, rules))
+    # print(predictByLERS(FILENAME, iter1, iter2, rules))
     
+    # exit(0)
+
     # identify
     #p = 2
     #print(getPerIdentifiedClass(rules, 2))
 
     # 並列実行して全データで評価
-    #proc=4
+    #proc = 32
     #freeze_support()
     #FUN = FPGrowth_LERS
-    #results = multi_main(proc, FILENAME, FUN, min_sup = min_sup_range)
+    #results = multi_main(proc, FILENAME, FUN, min_sup_range = min_sup_range)
 
+    #exit(0)
+    
     # 直列実行して全データで評価
+    SAVEPATH = DIR_UCI+'/'+FILENAME+'/FPGrowth/FPGrowth_LERS.csv'
     for min_sup in min_sup_range:
-        results = []
-        for iter1 in range(1,11,1):
+        for iter1 in range(1,2,1):
             for iter2 in range(1,11,1):
                 print(str(min_sup),",",str(iter1),",",str(iter2))
-                rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
-                accuracy = predictByLERS(FILENAME, iter1, iter2, rules)
+                FPGrowth_LERS(FILENAME, iter1, iter2, min_sup)
+                #rules = getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup, min_conf)
+                #acc = predictByLERS(FILENAME, iter1, iter2, rules)
                 # save
-                with open(savepath, "a") as f :
-                    f.writelines('FPGrowth_LERS,{min_sup},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=accuracy,min_sup=min_sup)+"\n")
-                results.append(accuracy)
-        # 平均と分散
-        print(getEvalMeanVar(results))
+                #with open(SAVEPATH, "a") as f :
+                #    f.writelines('FPGrowth_LERS,{min_sup},{min_conf},{FILENAME},{iter1},{iter2},{acc}'.format(FILENAME=FILENAME,iter1=iter1,iter2=iter2,acc=acc,min_sup=min_sup,min_conf=min_conf)+"\n")
     

@@ -14,9 +14,11 @@ library(tidyr)
 # 読み取り用のデータ準備
 # ===========================================
 FILENAME <- "adult_cleansing2"
+FILENAME <- "default_cleansing"
 FILENAME <- "hayes-roth"
 FILENAME <- "nursery"
 FILENAME <- "german_credit_categorical"
+
 DIRPATH <- paste0("/mnt/data/uci/",FILENAME)
 files.all <- list.files(DIRPATH)
 files.train <- files.all[str_detect(files.all, "train[0-9]")]

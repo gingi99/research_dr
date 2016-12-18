@@ -29,22 +29,32 @@ class Rule :
    def __init__(self):
        self.value = list()
        self.consequent = list()
-       self.support = float()
+       self.strength = float()
+       self.support = list()
+       self.support_v = float()
        self.conf = float()
    def setValue(self, values) :
        self.value = values
    def setConsequent(self, consequents) :
        self.consequent = consequents
+   def setStrength(self, strength) :
+       self.strength = strength
    def setSupport(self, supports) :
        self.support = supports
+   def setSupportV(self, support_v):
+       self.support_v = support_v
    def setConf(self, confidence) :
        self.conf = confidence
    def getValue(self) :
        return(self.value)
    def getConsequent(self) :
        return(self.consequent)
+   def getStrength(self):
+       return(self.strength)
    def getSupport(self) :
        return(self.support)
+   def getSupportV(self) :
+       return(self.support_v)
    def getSupportD(self) :
        return(self.support * len(self.value))
    def getConf(self) :
@@ -52,7 +62,9 @@ class Rule :
    def output(self) :
        print("value:" + str(self.value))
        print("consequent:" + str(self.consequent))
+       print("strength:" + str(self.strength))
        print("support:" + str(self.support))
+       print("support_v:" + str(self.support_v))
        print("conf:" + str(self.conf))
 
 # ======================================================
@@ -213,7 +225,7 @@ def getRulesByFPGrowth(FILENAME, iter1, iter2, classes, min_sup=0.1, min_conf=0.
         rule.setValue(values)
         #cls = list(set(cls_freq_item.items) & set(nocls_freq_item.items))[0]
         rule.setConsequent(cls)
-        rule.setSupport(cls_freq_item.freq)
+        rule.setStrength(cls_freq_item.freq)
         rule.setConf(conf)
         rules.append(rule)
 
@@ -328,8 +340,8 @@ if __name__ == "__main__":
 
     # データ準備
     FILENAME = "adult_cleansing2" 
-    FILENAME = "default_cleansing" 
-    FILENAME = "german_credit_categorical" 
+    #FILENAME = "default_cleansing" 
+    #FILENAME = "german_credit_categorical" 
 
     # データのインデックス
     #iter1 = 6 
@@ -369,7 +381,7 @@ if __name__ == "__main__":
     #exit(0)
     
     # 直列実行して全データで評価
-    SAVEPATH = DIR_UCI+'/'+FILENAME+'/FPGrowth/FPGrowth_LERS.csv'
+    #SAVEPATH = DIR_UCI+'/'+FILENAME+'/FPGrowth/FPGrowth_LERS.csv'
     for min_sup in min_sup_range:
         for iter1 in range(1,2,1):
             for iter2 in range(1,11,1):

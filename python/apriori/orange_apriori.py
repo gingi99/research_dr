@@ -158,7 +158,7 @@ def predictByLERS(FILENAME, iter1, iter2, rules) :
 # =====================================
 # Main 関数
 # =====================================
-def getRulesByApriori(FILENAME, classes, iter1, iter2, minsup, minconf) :
+def getRulesByApriori(FILENAME, classes, iter1, iter2, minsup, minconf, sup_ratio = True) :
     
     # read data
     filepath = DIR_UCI+'/'+FILENAME+'/alpha/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.txt'
@@ -170,7 +170,7 @@ def getRulesByApriori(FILENAME, classes, iter1, iter2, minsup, minconf) :
 
     # set parameter
     num_lines = sum(1 for line in open(filepath))
-    minsup = float(minsup) / float(num_lines)
+    minsup = float(minsup) if sup_ratio else float(minsup) / float(num_lines)
     #print minsup
 
     # induce rules
@@ -256,24 +256,26 @@ if __name__ == "__main__":
     #classes = ['D1', 'D2', 'D3']
     classes = ['D1', 'D2',]
 
-    #iter1 = 10
-    #iter2 = 3
+    iter1 = 10
+    iter2 = 3
 
     # support と confidence の閾値
     min_sup_range = range(2,11,1)
     min_sup_range = range(2,20,2)
-    #min_sup = 1
-    min_conf = 1.0
+    min_sup = 0.2
+    min_conf = 0.9
 
     # rule induction
-    #rules = getRulesByApriori(FILENAME, classes, iter1, iter2, min_sup, min_conf)
+    rules = getRulesByApriori(FILENAME, classes, iter1, iter2, min_sup, min_conf, sup_ratio=True)
 
     #print len(rules)
-    #for r in rules:
-    #    print(r.output())
+    for r in rules:
+        print(r.output())
 
     # predict by LERS
-    #print(predictByLERS(FILENAME, iter1, iter2, rules))
+    print(predictByLERS(FILENAME, iter1, iter2, rules))
+
+    exit(0)
 
     # 並列実行して全データで評価
     proc=32

@@ -56,7 +56,7 @@ class Rule :
    def getSupportV(self) :
        return(self.support_v)
    def getSupportD(self) :
-       return(self.support_v * len(self.value))
+       return(self.strength * len(self.value))
    def getConf(self) :
        return(self.conf)
    def output(self) :

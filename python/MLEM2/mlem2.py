@@ -12,106 +12,27 @@ from itertools import combinations
 from itertools import product
 from collections import defaultdict
 from collections import Counter
+from RuleMLEM2 import Rule
+from RuleMLEM2 import Rule2
+from rules_stat import getMeanSupport
+from rules_stat import getMinSupport
+from rules_stat import getMeanLength
+from rules_stat import getPerKRules
+from rules_stat import getPerNSupport
 
+# common
+sys.path.append("../common/")
+from util import exitEmptyList
+from util import intersect
+from util import  union
+from util import setdiff
+from util import isSuperList
 # ---------------------------
 # Option
 # ---------------------------
 pp = pprint.PrettyPrinter(indent=4)
 pd.set_option('display.max_columns', None)
 DIR_UCI = '/mnt/data/uci'
-
-# --------------------------
-# Rule Class
-# --------------------------
-class Rule :
-   def __init__(self):
-       self.idx = list()
-       self.consequent = list()
-       self.value = list()   
-       self.support = list()
-
-   def setIdx(self, idxes) :
-       self.idx = idxes
-   def setValue(self, values) :
-       self.value = values
-   def setConsequent(self, consequents) :
-       if not self.consequent :
-           self.consequent = consequents
-       else :
-           self.support = union(self.consequent, consequents)
-   def setSupport(self, supports) :
-       if not self.support :
-           self.support = supports
-       else :
-           self.support = intersect(self.support, supports)
-   def getIdx(self) :
-       return(self.idx)
-   def getConsequent(self) :
-       return(self.consequent)
-   def getValue(self) :
-       return(self.value)
-   def getSupport(self) :
-       return(sorted(self.support))
-   def output(self) :
-       print("idx:" + str(self.idx))
-       print("consequent:" + str(self.consequent))
-       print("value:" +  str(self.value))
-       print("support:" + str(self.support))
-
-# --------------------------
-# Rule Class 2
-# --------------------------
-class Rule2 :
-   def __init__(self):
-       self.value = defaultdict(list)  
-       self.consequent = list()
-       self.support = list()
-
-   def setValue(self, key, val) :
-       #if not self.value[key] : self.value[key] = [val]
-       #else : self.value[key].append(val)
-       if type(val) == str :
-           if val in self.value[key] : pass
-           else : self.value[key].append(val)
-       elif type(val) == list :
-           self.value[key] = union(self.value[key],val)
-       elif type(val) == tuple :
-           print("tuple ha mada")
-   def setConsequent(self, consequents) :
-       #if not self.consequent :
-       #    self.consequent = consequents
-       #else :
-       #    self.consequent = union(self.consequent, consequents)
-       if consequents in self.consequent : pass
-       else : self.consequent.append(consequents)
-   def setSupport(self, supports) :
-       if not self.support :
-           self.support = supports
-       else :
-           self.support = intersect(self.support, supports)
-   def getKey(self) :
-       return(list(self.value.keys()))
-   def getValue(self, idx, onecase=True) :
-       if not idx in self.getKey(): 
-           return(None)
-       else: 
-           i = iter(self.value[idx])
-           if any(i) and not any(i) and onecase : return(self.value[idx][0])
-           else : return(self.value[idx])
-   # consequent = 0 のときうまくいかない   
-   def getConsequent(self) :
-       i = iter(self.consequent)
-       if any(i) and not any(i) : return(self.consequent[0])
-       else : return(self.consequent)
-   def getSupport(self) :
-       return(sorted(self.support))
-   def delKey(self, key) :
-       self.value.pop(key, None)
-   def output(self) :
-       print("value:" + str(self.value))
-       print("consequent:" + str(self.consequent))
-       print("support:" + str(self.support))
-
 
 # =====================================
 # Rules を見る関数
@@ -143,60 +64,6 @@ def saveJsonRules(list_rules, fullpath_filename) :
         #print(json.dumps(rule_save_object))
 
 # =====================================
-# Rules を Python Object形式(pickle)でsaveする関数
-# =====================================
-def savePickleRules(list_rules, fullpath_filename) :
-    #fullpath_filename = '/Users/ooki/git/research_dr/python/Experiment/output.pkl'
-    with open(fullpath_filename, 'wb') as outfile:
-        pickle.dump(list_rules, outfile,  pickle.HIGHEST_PROTOCOL)
-
-# =====================================
-# Rules を Python Object形式(pickle)からロードする関数
-# =====================================
-def loadPickleRules(fullpath_filename) :
-    with open(fullpath_filename, mode='rb') as inputfile:
-        rules = pickle.load(inputfile)
-    return(rules)
-
-# =====================================
-# Rules の Supportの平均数
-# =====================================
-def getMeanSupport(list_rules, only_avg = True) :
-    supports = [len(r.getSupport()) for r in list_rules]
-    if only_avg :
-        ans = np.mean(supports)
-    else :
-        ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(supports),3)), std=('%.3f' % round(np.std(supports),3)))
-    return(ans)
-
-# =====================================
-# Rules の Supportの最小値
-# =====================================
-def getMinSupport(list_rules) :
-    supports = [len(r.getSupport()) for r in list_rules]
-    ans = np.min(supports)
-    return(ans)
-
-# =====================================
-# Rules の Ruleの長さの平均数
-# =====================================
-def getMeanLength(list_rules, only_avg = True) :
-    lengths = [len(r.getKey()) for r in list_rules]
-    if only_avg :
-        ans = np.mean(lengths)
-    else :
-        ans = '{mean}±{std}'.format(mean=('%.3f' % round(np.mean(lengths),3)), std=('%.3f' % round(np.std(lengths),3)))
-    return(ans)
-
-# =====================================
-# Rules のうち k-Supportを満たす割合
-# =====================================
-def getPerKRules(list_rules, k) :
-    k_rules = [r for r in list_rules if len(r.getSupport()) >= k]
-    ans = len(k_rules) / len(rules)
-    return(ans)
-
-# =====================================
 # Rules が推定するクラス
 # =====================================    
 def getEstimatedClass(list_rules) :
@@ -211,14 +78,6 @@ def getRulesClass(list_rules, consequent, judge=True):
     if judge : rules = [r for r in list_rules if r.getConsequent() == consequent]
     else : rules = [r for r in list_rules if r.getConsequent() != consequent]     
     return(rules)
-
-# =====================================
-# Rules のうち Suppprt = n の割合
-# =====================================    
-def getPerNSupport(list_rules, n) :
-    n_rules = [r for r in list_rules if len(r.getSupport()) == n]
-    ans = len(n_rules) / len(list_rules)
-    return(ans)
 
 # =====================================
 # Rules のうち、P個の属性値が分かれば、クラスを推定できるか
@@ -488,36 +347,15 @@ def getLowerApproximation(lower_table) :
         list_la[i] = lower_table[lower_table['class'] == i]['ind'].values.tolist()
     return(list_la)
 
-# =======================================
-# list が空ならexit
-# ======================================
-def exitEmptyList(l) :
-   if not l:
-       sys.exit("empty list")
-
 # =====================================
-# list同士のintersectを返す
+# rules のrが支持する対象で構成される決定表を作る
 # =====================================
-def intersect(list_a, list_b) :
-    return(list(set(list_a) & set(list_b)))
-
-# =====================================
-# list 同士のunionを返す
-# =====================================
-def union(list_a, list_b) :
-    return(list(set(list_a) | set(list_b)))
-
-# =====================================
-# list 同士のdiffを返す
-# =====================================
-def setdiff(list_a, list_b) :
-    return(list(set(list_a) - set(list_b)))
-
-# =====================================
-# list a が b に包含されているかを判定する
-# =====================================
-def isSuperList(list_a, list_b) :
-    return(set(list_b).issuperset(set(list_a)))
+def getDecisionTableFromRules(rules, decision_table):
+    df_merge = pd.DataFrame(columns = decision_table.columns)
+    for r in rules :
+        df_r = decision_table.iloc[r.getSupport()]
+        df_merge = pd.concat([df_merge, df_r], ignore_index = True, axis=0)
+    return(df_merge)
 
 # =====================================
 # Main 関数

@@ -5,12 +5,14 @@ import os
 sys.path.append('/Users/ooki/git/research_dr/python/MLEM2')
 sys.path.append(os.path.dirname(os.path.abspath("__file__"))+'/../MLEM2')
 from sklearn.metrics import accuracy_score
+import copy
 import importlib
 import mlem2
 import LERS
-import copy
 importlib.reload(mlem2)  
 importlib.reload(LERS)  
+from rules_stat import getNumRulesClass
+from rules_stat import getRulesValueCount
     
 # =====================================
 # 公正配慮すべき属性list_sをdecision_tableから削除する
@@ -37,6 +39,33 @@ def getNumRulesClassIncludeE(list_rules, attr, v, cls) :
     rules = [r for r in list_rules if r.getValue(attr) == v and r.getConsequent() == cls]
     return(len(rules))
 
+def getNumRulesIncludeMultipleE(list_rules,  dict_attribute_value):
+    tmp_rules = list_rules
+    for attr in dict_attribute_value.keys():
+        for v in dict_attribute_value[attr] : 
+            tmp_rules = [r for r in tmp_rules if r.getValue(attr) == v]
+    return(len(tmp_rules))
+
+def getNumRulesClassIncludeMultipleE(list_rules,  dict_attribute_value, cls):
+    tmp_rules = list_rules
+    for attr in dict_attribute_value.keys():
+        for v in dict_attribute_value[attr] : 
+            tmp_rules = [r for r in tmp_rules if r.getValue(attr) == v and r.getConsequent() == cls]
+    return(len(tmp_rules))
+
+# ======================================
+# 分割表a, b, c, d を返す
+# ======================================
+def getContingencyTable(list_rules, dict_attribute_value, CLASSES):
+    N = len(list_rules)
+    n1 = getNumRulesClass(list_rules, CLASSES["bad"])
+    n2 = getNumRulesClass(list_rules, CLASSES["good"])
+    a = getNumRulesClassIncludeMultipleE(list_rules, dict_attribute_value, CLASSES["bad"])
+    b = n1 - a
+    c = getNumRulesClassIncludeMultipleE(list_rules, dict_attribute_value, CLASSES["good"])
+    d = n2 - c
+    return(a,b,c,d)               
+ 
 # =====================================
 # Rules のうち 属性attr / 基本条件 e(属性attrの値v) を含むルールセットを返す
 # =====================================    
@@ -164,6 +193,32 @@ def getClift(rule, s, c, decision_table, list_judgeNominal):
     supp_c, conf_c = LERS.getSupportConfidence(rule_c, decision_table, list_judgeNominal)
     clift = conf / conf_c
     return(clift)
+
+# ====================================
+# Attribute Value dict を stringにして返す
+# ====================================
+def strAttributeValue(ATTRIBUTE_VALUE) :
+    list_string = []
+    for i in ATTRIBUTE_VALUE :
+        list_string.append(i+"-".join(ATTRIBUTE_VALUE[i]))
+    return("+".join(list_string))
+
+# ====================================
+# Attribute Value dict を stringにして返す
+# ====================================
+def getItemSet(rule_value) :
+    itemset = set()
+    for attr in rule_value :
+        itemset.add(attr+"-".join(rule_value[attr]))
+    return(itemset)
+
+def jaccard(set1, set2):
+    set_and = set1 & set2
+    set_or = set1 | set2
+    if len(set_or) == 0 :
+        return(0)
+    else :
+        return(len(set_and)/len(set_or))
 
 # ========================================
 # main

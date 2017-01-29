@@ -4,9 +4,7 @@ import pandas as pd
 import numpy as np
 import pprint
 import json
-import pickle
 import sys
-import copy
 from itertools import chain
 from itertools import combinations
 from itertools import product
@@ -14,17 +12,12 @@ from collections import defaultdict
 from collections import Counter
 from RuleMLEM2 import Rule
 from RuleMLEM2 import Rule2
-from rules_stat import getMeanSupport
-from rules_stat import getMinSupport
-from rules_stat import getMeanLength
-from rules_stat import getPerKRules
-from rules_stat import getPerNSupport
-
+from loadData import getDataNominalLowerNormal
+from loadData import getDataNominalLowerMixture
 # common
 sys.path.append("../common/")
 from util import exitEmptyList
 from util import intersect
-from util import  union
 from util import setdiff
 from util import isSuperList
 # ---------------------------
@@ -360,24 +353,7 @@ def getDecisionTableFromRules(rules, decision_table):
 # =====================================
 # Main 関数
 # =====================================
-def getRulesByMLEM2(FILENAME, iter1, iter2) :
-    
-    print(str(iter1),str(iter2))
-    
-    # read data
-    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train'+str(iter1)+'-'+str(iter2)+'.tsv'
-    decision_table = getDecisionTable(filepath)
-    decision_table = decision_table.dropna()
-    decision_table.index = range(decision_table.shape[0])
-
-    # read nominal
-    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'.nominal'
-    list_nominal = getNominalList(filepath)
-
-    # Lower Approximation
-    filepath = DIR_UCI+'/'+FILENAME+'/'+FILENAME+'-train-la-'+str(iter1)+'-'+str(iter2)+'.tsv'
-    df_la = pd.read_csv(filepath, delimiter='\t')
-    list_la = getLowerApproximation(df_la)
+def getRulesFromData1(decision_table, list_nominal, list_la):
 
     # AttributeValuePairs
     list_attributeValuePairs = getAttributeValueParis(decision_table, list_nominal)
@@ -492,14 +468,29 @@ def getRulesByMLEM2(FILENAME, iter1, iter2) :
     # END
     return(rules_convert)
 
+def getRulesByMLEM2(FILENAME, iter1, iter2) :
+    # loadData
+    decision_table, list_nominal, list_la = getDataNominalLowerNormal(DIR_UCI, FILENAME, iter1, iter2)
+    # induce rules
+    rules = getRulesFromData1(decision_table, list_nominal, list_la)
+    return(rules)
+
+def getRulesByMLEM2_MIXTURE(DIR, dataset, FILENAME, AB, ITER):
+    # loadData
+    decision_table, list_nominal, list_la = getDataNominalLowerMixture(DIR, dataset, FILENAME, AB, ITER)
+    # induce rules
+    rules = getRulesFromData1(decision_table, list_nominal, list_la)
+    return(rules)
 
 # ========================================
 # main
 # ========================================
 if __name__ == "__main__":
 
-    FILENAME = 'german_credit_categorical'
+    #FILENAME = 'german_credit_categorical'
+    FILENAME = 'adult_cleansing2'
     iter1 = 1
     iter2 = 1
     
     rules = getRulesByMLEM2(FILENAME, iter1, iter2)
+    showRules(rules)
